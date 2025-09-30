@@ -9,6 +9,10 @@ import { Search, MessageSquare, Pause, Mail } from "lucide-react";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
+export const dynamic = "force-dynamic";
+
+
+
 export default function ValuesInitPage() {
   const searchParams = useSearchParams();
   const router = useRouter();
