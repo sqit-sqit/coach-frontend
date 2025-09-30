@@ -152,13 +152,13 @@ export default function ValuesSelectPage() {
         </div>
       </div>
 
-      <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mt-8">
+      {/* Next button */}
+      <div className="flex justify-between items-center mt-8">
         {/* Refresh button */}
         <button
           onClick={async () => {
             try {
-              // const res = await fetch("http://localhost:8000/values/list");
-              const res = await fetch(`${API_URL}/values/list`);
+              const res = await fetch("http://localhost:8000/values/list");
               if (!res.ok) throw new Error("Failed to fetch values");
               const data = await res.json();
 
@@ -182,7 +182,6 @@ export default function ValuesSelectPage() {
           disabled={selectedValues.length === 0}
         />
       </div>
-
     </div>
     
   );

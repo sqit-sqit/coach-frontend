@@ -16,7 +16,9 @@ export default function Header() {
               priority
             />
           </Link>
-
+          // <Link href="/" className="font-bold text-lg">
+          //   Self-Reflection Space
+          // </Link> 
         </div>
 
         {/* Prawa strona – menu */}

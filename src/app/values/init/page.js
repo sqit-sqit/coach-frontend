@@ -99,7 +99,7 @@ function InitContent() {
 
       {/* --- Step 1 --- */}
       {step === 1 && (
-        <div className="space-y-6">
+        <div className="space-y-6 mt-10">
           <Heading level={1}>Welcome to Your Values Journey</Heading>
           <p className="text-lg text-gray-700">Let’s explore your values together.</p>
           <p className="text-gray-600 max-w-2xl mx-auto">
