@@ -1,0 +1,43 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* 🔹 Globalne zmienne kolorów */
+:root {
+  --font-sans: 'Montserrat', sans-serif;
+
+  /* Brand palette */
+  --Secondary-5-main: #FABB46; /* brand accent */
+  --Primary-1: #FFFBEC;        /* light background (tiles) */
+  --Primary-7-main: #FBD346;   /* border color */
+  --Chip-Active: #FEF2C7;      /* active chip background */
+}
+
+body {
+  font-family: var(--font-sans);
+  @apply bg-gray-50 text-gray-900;
+}
+/* 🔹 Nagłówki */
+h1 {
+  @apply text-4xl font-bold tracking-tight;
+}
+h2 {
+  @apply text-3xl font-semibold tracking-tight;
+}
+h3 {
+  @apply text-2xl font-semibold;
+}
+h4 {
+  @apply text-xl font-medium;
+}
+h5 {
+  @apply text-lg font-medium;
+}
+h6 {
+  @apply text-base font-medium;
+}
+
+/* 🔹 Tekst bazowy */
+p {
+  @apply text-base leading-relaxed;
+}
