@@ -96,7 +96,7 @@ export default function ValuesChoosePage() {
 
         <div className="flex justify-center gap-4 mt-6">
           <Button
-            text="🎮 Play a game"
+            text="Play a game"
             onClick={() => router.push("/values/game")}
           />
           <Button

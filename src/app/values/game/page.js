@@ -94,23 +94,23 @@ export default function ValuesGamePage() {
   const right = round[currentIndex + 1];
 
   return (
-    <div className="max-w-2xl mx-auto text-center mt-20 space-y-10">
+    <div className="max-w-2xl mx-auto text-center mt-20 space-y-10 px-4">
       <h2 className="text-xl font-bold">Which value is more important?</h2>
-      <div className="grid grid-cols-2 gap-6">
+      <div className="grid grid-cols-2 gap-3 sm:gap-6">
         {/* Kafelek 1 */}
         <div
           onClick={() => handleChoice(left)}
-          className="cursor-pointer p-6 bg-white border border-[var(--Primary-7-main)] rounded-xl shadow hover:bg-[var(--Chip-Active)] hover:scale-105 transition transform"
+          className="cursor-pointer p-3 sm:p-6 bg-white border border-[var(--Primary-7-main)] rounded-xl shadow hover:bg-[var(--Chip-Active)] hover:scale-105 transition transform"
         >
-          <p className="text-lg font-semibold text-gray-900">{left}</p>
+          <p className="text-sm sm:text-lg font-semibold text-gray-900 break-words">{left}</p>
         </div>
 
         {/* Kafelek 2 */}
         <div
           onClick={() => handleChoice(right)}
-          className="cursor-pointer p-6 bg-white border border-[var(--Primary-7-main)] rounded-xl shadow hover:bg-[var(--Chip-Active)] hover:scale-105 transition transform"
+          className="cursor-pointer p-3 sm:p-6 bg-white border border-[var(--Primary-7-main)] rounded-xl shadow hover:bg-[var(--Chip-Active)] hover:scale-105 transition transform"
         >
-          <p className="text-lg font-semibold text-gray-900">{right}</p>
+          <p className="text-sm sm:text-lg font-semibold text-gray-900 break-words">{right}</p>
         </div>
       </div>
     </div>
