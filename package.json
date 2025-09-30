@@ -14,6 +14,7 @@
     "electron-to-chromium": "^1.5.222",
     "escalade": "^3.2.0",
     "fraction.js": "^4.3.7",
+    "framer-motion": "^12.23.22",
     "lucide-react": "^0.544.0",
     "nanoid": "^3.3.11",
     "next": "^15.5.3",
@@ -34,9 +35,8 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "engines": {
-  "node": "20.x"
+    "node": "20.x"
   },
-
   "keywords": [],
   "author": "",
   "license": "ISC",
