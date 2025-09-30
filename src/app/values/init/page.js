@@ -1,24 +1,22 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import Button from "components/ui/Button";
 import Heading from "components/ui/Heading";
 import BackButton from "components/ui/BackButton";
 import { Search, MessageSquare, Pause, Mail } from "lucide-react";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL;
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "";
 
 export const dynamic = "force-dynamic";
 
-
-
-export default function ValuesInitPage() {
+// 🔹 właściwy komponent – zawiera useSearchParams
+function InitContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
 
   const userId = "demo-user-123"; // tymczasowe ID użytkownika
-
   const initialStep = parseInt(searchParams.get("step") || "1", 10);
   const [step, setStep] = useState(initialStep);
 
@@ -331,5 +329,14 @@ export default function ValuesInitPage() {
         </div>
       )}
     </div>
+  );
+}
+
+// 🔹 Eksport główny z Suspense wrapperem
+export default function ValuesInitPageWrapper() {
+  return (
+    <Suspense fallback={<div>Loading…</div>}>
+      <InitContent />
+    </Suspense>
   );
 }
