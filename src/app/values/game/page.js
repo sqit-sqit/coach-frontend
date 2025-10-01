@@ -17,8 +17,8 @@ export default function ValuesGamePage() {
   const [history, setHistory] = useState([]);
   const [progress, setProgress] = useState(0);
   const [totalWinners, setTotalWinners] = useState(0);
-  const [completedPairs, setCompletedPairs] = useState(0); // New state for completed pairs
-  const [totalPairs, setTotalPairs] = useState(0); // Add new state for total pairs
+  const [completedPairs, setCompletedPairs] = useState(0);
+  const [totalPairs, setTotalPairs] = useState(0);
   const TOTAL_ROUNDS = 8;
 
   const router = useRouter();
@@ -97,9 +97,9 @@ export default function ValuesGamePage() {
     setRound(previousState.round);
     setWinners(previousState.winners);
     setCurrentIndex(previousState.currentIndex);
-    setCompletedPairs(previousState.completedPairs); // Restore completed pairs count
+    setCompletedPairs(previousState.completedPairs);
     setHistory((prev) => prev.slice(0, -1));
-    setTotalWinners((prev) => prev - 1); // Decrement total winners on undo
+    setTotalWinners((prev) => prev - 1);
   };
 
   const handleRestart = () => {
@@ -111,13 +111,10 @@ export default function ValuesGamePage() {
     visible: {
       opacity: 1,
       y: 0,
-      transition: {
-        duration: 0.5,
-      },
+      transition: { duration: 0.5 },
     },
   };
 
-  // Update progress calculation
   const calculateProgress = () => {
     if (finalValue) return 100;
     return Math.min((completedPairs / totalPairs) * 100, 100);
@@ -127,10 +124,11 @@ export default function ValuesGamePage() {
     return <p className="text-center mt-20">Loading values…</p>;
   }
 
+  // 🔹 ekran końcowy z finalValue
   if (finalValue) {
     return (
       <div className="min-h-screen flex flex-col">
-        {/* Progress bar and Back button */}
+        {/* Progress bar */}
         <div className="w-full h-2 bg-gray-200">
           <div
             className="h-full bg-[var(--Primary-7-main)] transition-all duration-300"
@@ -167,8 +165,30 @@ export default function ValuesGamePage() {
                 </div>
               </motion.div>
 
+              {/* 🔹 zapis finalValue do backendu i przejście do chatu */}
               <button
-                onClick={() => router.push("/values/chat")}
+                onClick={async () => {
+                  try {
+                    const res = await fetch(`${API_URL}/values/choose`, {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({
+                        user_id: userId,
+                        chosen_value: finalValue,
+                      }),
+                    });
+
+                    if (!res.ok) throw new Error("Failed to save chosen value");
+
+                    const data = await res.json();
+                    console.log("Chosen value saved from game:", data);
+
+                    router.push("/values/chat");
+                  } catch (err) {
+                    console.error("Error saving chosen value from game:", err);
+                    alert("Could not save chosen value. Please try again.");
+                  }
+                }}
                 className="w-full py-4 bg-[rgb(99,102,241)] text-white rounded-[24px] font-semibold hover:opacity-90 transition-opacity"
               >
                 Next →
@@ -206,7 +226,7 @@ export default function ValuesGamePage() {
 
   return (
     <div className="min-h-screen flex flex-col">
-      {/* pasek postępu */}
+      {/* Progress bar */}
       <div className="w-full h-2 bg-gray-200">
         <div
           className="h-full bg-[var(--Primary-7-main)] transition-all duration-300"
@@ -214,7 +234,7 @@ export default function ValuesGamePage() {
         />
       </div>
 
-      {/* back */}
+      {/* Back */}
       <div className="p-4">
         <button
           onClick={() => router.back()}
@@ -224,7 +244,7 @@ export default function ValuesGamePage() {
         </button>
       </div>
 
-      {/* gra */}
+      {/* Game */}
       <div className="flex-1 flex flex-col">
         <div className="max-w-5xl mx-auto w-full px-4 text-center space-y-10 mt-10">
           <h2 className="text-2xl font-bold mb-2">
@@ -242,7 +262,7 @@ export default function ValuesGamePage() {
                 transition={{ duration: 0.3 }}
                 className="flex items-center justify-center gap-4"
               >
-                {/* lewy kafelek */}
+                {/* Left card */}
                 <div
                   onClick={() => handleChoice(left)}
                   className="flex-1 cursor-pointer p-4 sm:p-6 bg-[var(--Background-yellow)] border border-[var(--Primary-7-main)] rounded-xl shadow hover:bg-[var(--Chip-Active)] hover:scale-105 transition transform max-w-md"
@@ -256,7 +276,7 @@ export default function ValuesGamePage() {
 
                 <div className="text-xl font-bold px-4">OR</div>
 
-                {/* prawy kafelek */}
+                {/* Right card */}
                 <div
                   onClick={() => handleChoice(right)}
                   className="flex-1 cursor-pointer p-4 sm:p-6 bg-[var(--Background-yellow)] border border-[var(--Primary-7-main)] rounded-xl shadow hover:bg-[var(--Chip-Active)] hover:scale-105 transition transform max-w-md"
@@ -271,7 +291,7 @@ export default function ValuesGamePage() {
             )}
           </AnimatePresence>
 
-          {/* kontrolki */}
+          {/* Controls */}
           <div className="flex justify-between items-center mt-8">
             <button
               onClick={handleUndo}

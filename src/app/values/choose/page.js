@@ -5,12 +5,12 @@ import { useRouter } from "next/navigation";
 import Button from "components/ui/Button";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
+const userId = "demo-user-123";
 
 export default function ValuesChoosePage() {
   const [reducedValues, setReducedValues] = useState([]);
   const [chosenValue, setChosenValue] = useState(null);
   const router = useRouter();
-  const userId = "demo-user-123";
 
   // 🔹 Pobierz wartości z fazy REDUCE
   useEffect(() => {
@@ -27,6 +27,23 @@ export default function ValuesChoosePage() {
       }
     }
     fetchReducedValues();
+  }, []);
+
+  // 🔹 Pobierz wcześniej wybraną wartość, żeby ją podświetlić
+  useEffect(() => {
+    async function fetchChosenValue() {
+      try {
+        const res = await fetch(`${API_URL}/values/choose/${userId}`);
+        if (!res.ok) return; // brak wyboru jeszcze
+        const data = await res.json();
+        if (data?.chosen_value) {
+          setChosenValue(data.chosen_value);
+        }
+      } catch (err) {
+        console.error("Error fetching chosen value:", err);
+      }
+    }
+    fetchChosenValue();
   }, []);
 
   const saveChosenValue = async () => {
@@ -90,17 +107,16 @@ export default function ValuesChoosePage() {
           Now you should choose your one most important value
         </h2>
         <p className="text-gray-600 max-w-2xl mx-auto">
-          You can either play a short game that helps you decide, or just pick
-          the one you already know is the most important.
+          Now from the above set of values choose one, the most important value
+          in your life at the moment. Select one and click "Continue" to
+          proceed. If there is a challenge to decide which one is the most
+          important, play a game which will help to decide.
         </p>
 
         <div className="flex justify-center gap-4 mt-6">
+          <Button text="Play a game" onClick={() => router.push("/values/game")} />
           <Button
-            text="Play a game"
-            onClick={() => router.push("/values/game")}
-          />
-          <Button
-            text="✨ I know the one"
+            text="Continue"
             onClick={saveChosenValue}
             disabled={!chosenValue}
           />

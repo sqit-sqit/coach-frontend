@@ -21,9 +21,9 @@ export default function DashboardPage() {
               className="w-10 h-10 mx-auto mb-4"
               style={{ color: "var(--Secondary-5-main)" }}
             />
-            <h2 className="text-xl font-semibold mb-2">Warsztat Wartości</h2>
+            <h2 className="text-xl font-semibold mb-2">Value Workshop</h2>
             <p className="text-gray-600">
-              Poznaj i uporządkuj swoje wartości życiowe.
+              Recognize your life values.
             </p>
           </div>
         </Link>
