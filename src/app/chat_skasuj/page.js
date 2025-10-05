@@ -11,7 +11,7 @@ export default function ValuesChatPage() {
   const router = useRouter();
   const [messages, setMessages] = useState([
     {
-      role: "assistant",
+      role: "ai",
       title: "Honesty value workshop",
       content:
         "Lorem ipsum dolor sit amet consectetur. Bibendum nibh amet viverra velit proin leo venenatis augue ut. Auctor ac nit eget nibh diam dictum viverra sed ac in. Mattis orci non ultricies in pellentesque porttitor risus laoreet sed. Vivamus nec facilisis leo. Gravida dui suspendisse senectus pharetra viverra. Eu nibh eget aliquet ornare sapien amet faucibus nec. Massa est ut sit arcu. Dignissim nibh egestas nibh eget eget malesuada. Donec pellentesque tristique odio sed mattis euismod cras. Sit ullamcorper fusce et sit sed urna.",
@@ -30,7 +30,7 @@ export default function ValuesChatPage() {
       setMessages((prev) => [
         ...prev,
         {
-          role: "assistant",
+          role: "ai",
           content: `Response to: ${message}`,
         },
       ]);

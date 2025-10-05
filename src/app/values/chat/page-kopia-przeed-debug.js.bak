@@ -1,0 +1,150 @@
+"use client";
+
+import { useState, useEffect, useRef } from "react";
+import { useRouter } from "next/navigation";
+import ChatBubble from "components/ui/ChatBubble";
+import ChatInput from "components/ui/ChatInput";
+import QuickChip from "components/ui/QuickChip";
+import ValuesLayout from "components/layouts/ValuesLayout";
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+const userId = "demo-user-123";
+
+export default function ValuesChatPage() {
+  const router = useRouter();
+  const [messages, setMessages] = useState([]);
+  const [chosenValue, setChosenValue] = useState(null);
+
+  const messagesEndRef = useRef(null);
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  useEffect(() => {
+    if (messages.length > 1) {
+      scrollToBottom();
+    }
+  }, [messages]);
+
+  // 🔹 Pobierz wybraną wartość i ustaw startową wiadomość AI
+  useEffect(() => {
+    async function fetchChosenValue() {
+      try {
+        const res = await fetch(`${API_URL}/values/choose/${userId}`);
+        if (!res.ok) throw new Error("Failed to fetch chosen value");
+        const data = await res.json();
+        setChosenValue(data.chosen_value);
+
+        setMessages([
+          {
+            role: "ai",
+            title: `${data.chosen_value} value workshop`,
+            content: `Let's explore why "${data.chosen_value}" is important to you and how it influences your decisions. What makes this value especially meaningful to you?`,
+          },
+        ]);
+      } catch (err) {
+        console.error("Error fetching chosen value:", err);
+        setMessages([
+          {
+            role: "ai",
+            content: "I'm having trouble loading your chosen value. Please refresh the page.",
+          },
+        ]);
+      }
+    }
+    fetchChosenValue();
+  }, []);
+
+  const quickTips = [
+    {
+      label: "Quick tips",
+      onClick: () => handleSendMessage("Can you give me some quick tips about working with this value?"),
+    },
+    {
+      label: "Jump to summary",
+      onClick: () => handleSendMessage("Can you summarize our conversation about this value?"),
+    },
+  ];
+
+  // 🔹 Obsługa wysyłania wiadomości
+  const handleSendMessage = async (message) => {
+    // Add user message immediately
+    const userMessage = { role: "user", content: message };
+    setMessages((prev) => [...prev, userMessage]);
+
+    try {
+      const res = await fetch(`${API_URL}/values/chat/${userId}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          message: message,
+          history: messages.map((m) => ({
+            role: m.role,
+            content: m.content,
+          })),
+        }),
+      });
+
+      if (!res.ok) {
+        throw new Error(`HTTP error! status: ${res.status}`);
+      }
+
+      const data = await res.json();
+
+      // Add AI response
+      setMessages((prev) => [...prev, { role: "ai", content: data.reply }]);
+    } catch (error) {
+      console.error("Chat error:", error);
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: "ai",
+          content: "Sorry, I couldn't process your message. Please try again.",
+          error: true,
+        },
+      ]);
+    }
+  };
+
+  return (
+    <div className="min-h-screen flex flex-col bg-[#F9F9FB]">
+      {/* Chat messages area */}
+      <div className="flex-1 overflow-y-auto">
+        <ValuesLayout className="space-y-6">
+          {/* Back button */}
+          <button
+            onClick={() => router.push("/values/choose")}
+            className="flex items-center text-gray-600 mb-6"
+          >
+            ← Back
+          </button>
+
+          {/* Wiadomości */}
+          <div className="space-y-6">
+            {messages.map((message, index) => (
+              <ChatBubble key={index} role={message.role} title={message.title}>
+                {message.content}
+              </ChatBubble>
+            ))}
+            <div ref={messagesEndRef} />
+          </div>
+        </ValuesLayout>
+      </div>
+
+      {/* Input area – sticky na dole */}
+      <div className="bg-transparent sticky bottom-0">
+        <ValuesLayout className="space-y-4">
+          <div className="flex gap-2 justify-end">
+            {quickTips.map((tip, index) => (
+              <QuickChip key={index} label={tip.label} onClick={tip.onClick} />
+            ))}
+          </div>
+          <ChatInput onSend={handleSendMessage} />
+        </ValuesLayout>
+      </div>
+    </div>
+  );
+}

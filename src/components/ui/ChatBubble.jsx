@@ -1,5 +1,5 @@
 export default function ChatBubble({ role = "user", title, children }) {
-  if (role === "ai") {
+  if (role === "assistant") {
     return (
       <div className="w-full flex justify-start">
         <div className="w-[902px] min-h-[24px] flex flex-col gap-2 text-left">
@@ -10,9 +10,9 @@ export default function ChatBubble({ role = "user", title, children }) {
             </p>
           )}
           {/* Tekst AI */}
-          <p className="font-montserrat font-medium text-[15px] leading-[160%] tracking-[0.004em] text-gray-800">
+          <div className="font-montserrat font-medium text-[15px] leading-[160%] tracking-[0.004em] text-gray-800">
             {children}
-          </p>
+          </div>
         </div>
       </div>
     );
