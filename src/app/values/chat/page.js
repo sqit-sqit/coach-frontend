@@ -15,6 +15,7 @@ export default function ValuesChatPage() {
   const [messages, setMessages] = useState([]);
   const [chosenValue, setChosenValue] = useState(null);
   const [isStreaming, setIsStreaming] = useState(false);
+  const [chatMode, setChatMode] = useState("chat"); // "chat" or "reflect"
 
   const messagesEndRef = useRef(null);
   const abortControllerRef = useRef(null);
@@ -64,13 +65,114 @@ export default function ValuesChatPage() {
       onClick: () => handleSendMessage("Can you give me some quick tips about working with this value?"),
     },
     {
-      label: "Jump to summary",
-      onClick: () => handleSendMessage("Can you summarize our conversation about this value?"),
+      label: chatMode === "chat" ? "Go to the next step" : "Jump to summary",
+      onClick: () => {
+        console.log("Button clicked, chatMode:", chatMode);
+        chatMode === "chat" ? handleJumpToSummary() : handleGenerateSummary();
+      },
     },
   ];
 
+  // 🔹 Obsługa przejścia do summary
+  const handleJumpToSummary = async () => {
+    console.log("handleJumpToSummary called, switching to reflect mode");
+    // Przełącz tryb na "reflect"
+    setChatMode("reflect");
+    
+    // Wyślij wiadomość z nowym trybem (handleSendMessage doda wiadomość użytkownika)
+    await handleSendMessage("go to the next step", "reflect");
+  };
+
+  // 🔹 Obsługa generowania podsumowania
+  const handleGenerateSummary = async () => {
+    if (isStreaming) return; // Prevent concurrent requests
+
+    // Dodaj wiadomość użytkownika "Jump to summary"
+    const userMessage = { role: "user", content: "Jump to summary" };
+    const summaryPlaceholder = { role: "assistant", content: "", isGenerating: true };
+    setMessages(prev => [...prev, userMessage, summaryPlaceholder]);
+    setIsStreaming(true);
+
+    try {
+      // Podziel historię na chat i reflection (bez ostatnich 2 wiadomości: "Jump to summary" i placeholder)
+      const messagesForHistory = messages.slice(0, -2);
+      const chatHistory = [];
+      const reflectionHistory = [];
+      let inReflectionPhase = false;
+
+      for (const msg of messagesForHistory) {
+        if (msg.content === "go to the next step" && msg.role === "user") {
+          inReflectionPhase = true;
+          continue;
+        }
+        
+        if (inReflectionPhase) {
+          reflectionHistory.push({
+            role: msg.role,
+            content: msg.content
+          });
+        } else {
+          chatHistory.push({
+            role: msg.role,
+            content: msg.content
+          });
+        }
+      }
+
+      // Wywołaj endpoint generowania podsumowania
+      const res = await fetch(`${API_URL}/values/chat/${userId}/summary`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          chat_history: chatHistory,
+          reflection_history: reflectionHistory
+        }),
+      });
+
+      if (!res.ok) {
+        throw new Error(`HTTP error! status: ${res.status}`);
+      }
+
+      const data = await res.json();
+      
+      // Zastąp placeholder prawdziwym podsumowaniem
+      setMessages(prev => {
+        const updated = [...prev];
+        const lastIndex = updated.length - 1;
+        if (updated[lastIndex]?.isGenerating) {
+          updated[lastIndex] = {
+            role: "assistant",
+            content: data.summary,
+            isSummary: true
+          };
+        }
+        return updated;
+      });
+
+    } catch (error) {
+      console.error("Summary generation error:", error);
+      setMessages(prev => {
+        const updated = [...prev];
+        const lastIndex = updated.length - 1;
+        if (updated[lastIndex]?.isGenerating) {
+          updated[lastIndex] = {
+            role: "assistant",
+            content: "Sorry, I couldn't generate your summary. Please try again.",
+            error: true
+          };
+        }
+        return updated;
+      });
+    } finally {
+      setIsStreaming(false);
+    }
+  };
+
   // 🔹 Obsługa wysyłania wiadomości
-  const handleSendMessage = async (message) => {
+  const handleSendMessage = async (message, mode = null) => {
+    const currentMode = mode || chatMode;
     if (isStreaming) return; // Prevent concurrent requests
 
     // Add user message and a placeholder assistant message for streaming
@@ -102,6 +204,7 @@ export default function ValuesChatPage() {
             role: m.role,
             content: m.content,
           })),
+          mode: currentMode,
         }),
       });
 
@@ -208,7 +311,7 @@ export default function ValuesChatPage() {
           {/* Wiadomości */}
           <div className="space-y-6">
             {messages.map((message, index) => (
-              <ChatBubble key={index} role={message.role} title={message.title}>
+              <ChatBubble key={index} role={message.role} title={message.title} isSummary={message.isSummary}>
                 {message.content && message.content.length > 0 ? (
                   message.content
                 ) : message.role === "assistant" && isStreaming ? (
