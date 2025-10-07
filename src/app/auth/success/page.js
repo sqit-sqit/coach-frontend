@@ -1,20 +1,24 @@
 'use client'
 
-import { useEffect } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
 
 // Wyłącz prerendering dla tej strony
 export const dynamic = 'force-dynamic'
 
 export default function AuthSuccess() {
   const router = useRouter()
-  const searchParams = useSearchParams()
-  const token = searchParams.get('token')
+  const [token, setToken] = useState(null)
 
   useEffect(() => {
-    if (token) {
+    // Pobierz token z URL po stronie klienta
+    const urlParams = new URLSearchParams(window.location.search)
+    const tokenFromUrl = urlParams.get('token')
+    setToken(tokenFromUrl)
+
+    if (tokenFromUrl) {
       // Zapisz token w localStorage
-      localStorage.setItem('auth_token', token)
+      localStorage.setItem('auth_token', tokenFromUrl)
       
       // Przekieruj do dashboard
       router.push('/dashboard')
@@ -22,7 +26,7 @@ export default function AuthSuccess() {
       // Brak tokenu - przekieruj do logowania
       router.push('/')
     }
-  }, [token, router])
+  }, [router])
 
   return (
     <div className="min-h-screen flex items-center justify-center">
