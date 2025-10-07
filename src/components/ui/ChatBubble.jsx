@@ -1,4 +1,4 @@
-export default function ChatBubble({ role = "user", title, children, isSummary = false }) {
+export default function ChatBubble({ role = "user", title, children, isSummary = false, hasActionChips = false, onActionChipClick }) {
   if (role === "assistant") {
     return (
       <div className="w-full flex justify-start">
@@ -9,6 +9,18 @@ export default function ChatBubble({ role = "user", title, children, isSummary =
               {title}
             </p>
           )}
+          {/* Download PDF Chip - na górze */}
+          {hasActionChips && (
+            <div className="flex flex-wrap gap-2 mb-4">
+              <button
+                onClick={() => onActionChipClick?.('download-pdf')}
+                className="px-4 py-2 rounded-full border border-[var(--Primary-7-main)] bg-[var(--Chip-Active)] text-gray-900 cursor-pointer hover:scale-105 transition-transform"
+              >
+                Download Summary as PDF
+              </button>
+            </div>
+          )}
+
           {/* Tekst AI */}
           <div className={`font-montserrat font-medium text-[15px] leading-[160%] tracking-[0.004em] ${isSummary ? 'text-gray-900' : 'text-gray-800'}`}>
             {isSummary ? (
@@ -19,6 +31,24 @@ export default function ChatBubble({ role = "user", title, children, isSummary =
               children
             )}
           </div>
+
+          {/* Pozostałe Chipsy - pod napisem */}
+          {hasActionChips && (
+            <div className="flex flex-wrap gap-2 mt-4">
+              <button
+                onClick={() => onActionChipClick?.('retry-session')}
+                className="px-4 py-2 rounded-full border border-[var(--Primary-7-main)] bg-[var(--Chip-Active)] text-gray-900 cursor-pointer hover:scale-105 transition-transform"
+              >
+                Take the Session One More Time
+              </button>
+              <button
+                onClick={() => onActionChipClick?.('finish-session')}
+                className="px-4 py-2 rounded-full border border-[var(--Primary-7-main)] bg-[var(--Chip-Active)] text-gray-900 cursor-pointer hover:scale-105 transition-transform"
+              >
+                Finish for Today
+              </button>
+            </div>
+          )}
         </div>
       </div>
     );

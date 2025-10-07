@@ -6,6 +6,7 @@ import ChatBubble from "components/ui/ChatBubble";
 import ChatInput from "components/ui/ChatInput";
 import QuickChip from "components/ui/QuickChip";
 import ValuesLayout from "components/layouts/ValuesLayout";
+import jsPDF from "jspdf";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 const userId = "demo-user-123";
@@ -16,6 +17,7 @@ export default function ValuesChatPage() {
   const [chosenValue, setChosenValue] = useState(null);
   const [isStreaming, setIsStreaming] = useState(false);
   const [chatMode, setChatMode] = useState("chat"); // "chat" or "reflect"
+  const [sessionSummary, setSessionSummary] = useState(null); // Store summary for PDF download
 
   const messagesEndRef = useRef(null);
   const abortControllerRef = useRef(null);
@@ -151,6 +153,22 @@ export default function ValuesChatPage() {
         return updated;
       });
 
+      // Zapisz podsumowanie dla PDF
+      setSessionSummary(data.summary);
+
+      // Dodaj wiadomość podziękowania z opcjami
+      setTimeout(() => {
+        console.log('Adding thank you message with action chips');
+        setMessages(prev => [
+          ...prev,
+          {
+            role: "assistant",
+            content: "Thank you for this session. What would you like to do?",
+            hasActionChips: true
+          }
+        ]);
+      }, 1000); // Małe opóźnienie żeby podsumowanie się wyświetliło
+
     } catch (error) {
       console.error("Summary generation error:", error);
       setMessages(prev => {
@@ -168,6 +186,96 @@ export default function ValuesChatPage() {
     } finally {
       setIsStreaming(false);
     }
+  };
+
+  // 🔹 Obsługa akcji chips
+  const handleActionChipClick = (action) => {
+    switch (action) {
+      case 'download-pdf':
+        handleDownloadPDF();
+        break;
+      case 'retry-session':
+        handleRetrySession();
+        break;
+      case 'finish-session':
+        handleFinishSession();
+        break;
+      default:
+        console.log('Unknown action:', action);
+    }
+  };
+
+  // 🔹 Pobieranie PDF
+  const handleDownloadPDF = () => {
+    if (!sessionSummary) {
+      alert('No summary available to download');
+      return;
+    }
+
+    // Create PDF document
+    const doc = new jsPDF();
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const pageHeight = doc.internal.pageSize.getHeight();
+    let yPosition = 20;
+
+    // Title
+    doc.setFontSize(20);
+    doc.setFont("helvetica", "bold");
+    doc.text("Values Session Summary", pageWidth / 2, yPosition, { align: "center" });
+    yPosition += 20;
+
+    // Selected Value
+    doc.setFontSize(14);
+    doc.setFont("helvetica", "bold");
+    doc.text(`Selected Value: ${chosenValue}`, 20, yPosition);
+    yPosition += 15;
+
+    // Date
+    doc.setFontSize(10);
+    doc.setFont("helvetica", "normal");
+    doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 20, yPosition);
+    yPosition += 20;
+
+    // Summary content
+    doc.setFontSize(12);
+    doc.setFont("helvetica", "normal");
+    
+    // Split summary into lines and add to PDF
+    const summaryLines = doc.splitTextToSize(sessionSummary, pageWidth - 40);
+    
+    for (let i = 0; i < summaryLines.length; i++) {
+      if (yPosition > pageHeight - 20) {
+        doc.addPage();
+        yPosition = 20;
+      }
+      doc.text(summaryLines[i], 20, yPosition);
+      yPosition += 6;
+    }
+
+    // Footer
+    const totalPages = doc.getNumberOfPages();
+    for (let i = 1; i <= totalPages; i++) {
+      doc.setPage(i);
+      doc.setFontSize(8);
+      doc.setFont("helvetica", "normal");
+      doc.text(`Page ${i} of ${totalPages}`, pageWidth - 30, pageHeight - 10);
+    }
+
+    // Download PDF
+    const fileName = `values-session-${chosenValue?.toLowerCase().replace(/\s+/g, '-')}-${new Date().toISOString().split('T')[0]}.pdf`;
+    doc.save(fileName);
+  };
+
+  // 🔹 Powtórzenie sesji
+  const handleRetrySession = () => {
+    // Przekieruj do wyboru wartości
+    router.push('/values/select');
+  };
+
+  // 🔹 Zakończenie sesji
+  const handleFinishSession = () => {
+    // Navigate to dashboard or home
+    router.push('/dashboard');
   };
 
   // 🔹 Obsługa wysyłania wiadomości
@@ -311,7 +419,14 @@ export default function ValuesChatPage() {
           {/* Wiadomości */}
           <div className="space-y-6">
             {messages.map((message, index) => (
-              <ChatBubble key={index} role={message.role} title={message.title} isSummary={message.isSummary}>
+                <ChatBubble 
+                  key={index} 
+                  role={message.role} 
+                  title={message.title} 
+                  isSummary={message.isSummary}
+                  hasActionChips={message.hasActionChips}
+                  onActionChipClick={handleActionChipClick}
+                >
                 {message.content && message.content.length > 0 ? (
                   message.content
                 ) : message.role === "assistant" && isStreaming ? (
