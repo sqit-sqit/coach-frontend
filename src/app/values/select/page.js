@@ -1,25 +1,34 @@
 "use client";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL;
-
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Button from "components/ui/Button";
 import BackButton from "components/ui/BackButton";
+import { useAuth } from "hooks/useAuth";
+import { useApi } from "hooks/useApi";
 
 export default function ValuesSelectPage() {
+  const router = useRouter();
+  const { user, isAuthenticated, isLoading } = useAuth();
+  const { userId, apiGet, apiPost } = useApi();
   const [allValues, setAllValues] = useState([]);
   const [selectedValues, setSelectedValues] = useState([]);
-  const router = useRouter();
 
-
+  // Redirect if not authenticated
   useEffect(() => {
+    if (!isLoading && !isAuthenticated) {
+      router.push('/');
+    }
+  }, [isLoading, isAuthenticated, router]);
+
+  // Fetch values when userId is available
+  useEffect(() => {
+    if (!userId) return; // Wait for user ID
+    
     async function fetchValues() {
       try {
-        const userId = "demo-user-123";
-
         // 🔹 Najpierw pobierz zapisany progres (czy coś już jest w select)
-        const progressRes = await fetch(`${API_URL}/values/init/progress/${userId}`);
+        const progressRes = await apiGet(`/values/init/progress/${userId}`);
         if (progressRes.ok) {
           const progressData = await progressRes.json();
           const alreadySelected = progressData?.select?.data?.selected_values || [];
@@ -27,8 +36,7 @@ export default function ValuesSelectPage() {
         }
 
         // 🔹 Potem pobierz listę wszystkich wartości (30 losowych)
-        const res = await fetch(`${API_URL}/values/list`);
-        if (!res.ok) throw new Error("Failed to fetch values");
+        const res = await apiGet(`/values/list`);
         const data = await res.json();
 
         const shuffled = data.sort(() => 0.5 - Math.random());
@@ -39,7 +47,19 @@ export default function ValuesSelectPage() {
     }
 
     fetchValues();
-  }, []);
+  }, [userId]);
+
+  // Show loading while authenticating - AFTER all hooks
+  if (isLoading || !userId) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading...</p>
+        </div>
+      </div>
+    );
+  }
 
 
 
@@ -57,23 +77,13 @@ export default function ValuesSelectPage() {
   
 
   const saveProgress = async () => {
+    if (!userId) return; // No user ID available
+    
     try {
-      const userId = "demo-user-123";
-
-      const res = await fetch(`${API_URL}/values/select`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          user_id: userId,
-          selected_values: selectedValues,
-        }),
+      const res = await apiPost(`/values/select`, {
+        user_id: userId,
+        selected_values: selectedValues,
       });
-
-      if (!res.ok) {
-        console.error("Server error:", res.status);
-        alert("Could not save progress. Please try again.");
-        return;
-      }
 
       const data = await res.json();
       console.log("Progress saved:", data);

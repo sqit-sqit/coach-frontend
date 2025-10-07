@@ -4,11 +4,13 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import Button from "components/ui/Button";
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL;
-const userId = "demo-user-123";
+import { useAuth } from "hooks/useAuth";
+import { useApi } from "hooks/useApi";
 
 export default function ValuesGamePage() {
+  const router = useRouter();
+  const { user, isAuthenticated, isLoading } = useAuth();
+  const { userId, apiGet, apiPost } = useApi();
   const [round, setRound] = useState([]);
   const [winners, setWinners] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -21,14 +23,20 @@ export default function ValuesGamePage() {
   const [totalPairs, setTotalPairs] = useState(0);
   const TOTAL_ROUNDS = 8;
 
-  const router = useRouter();
+  // Redirect if not authenticated
+  useEffect(() => {
+    if (!isLoading && !isAuthenticated) {
+      router.push('/');
+    }
+  }, [isLoading, isAuthenticated, router]);
 
   // 👇 fetch values (globalnie)
   const fetchValues = async () => {
+    if (!userId) return; // Wait for user ID
+    
     try {
       setLoading(true);
-      const res = await fetch(`${API_URL}/values/reduce/${userId}`);
-      if (!res.ok) throw new Error("Failed to fetch reduced values");
+      const res = await apiGet(`/values/reduce/${userId}`);
       const data = await res.json();
       const reduced = data?.reduced_values || [];
 
@@ -59,8 +67,21 @@ export default function ValuesGamePage() {
   };
 
   useEffect(() => {
+    if (!userId) return; // Wait for user ID
     fetchValues();
-  }, []);
+  }, [userId]);
+
+  // Show loading while authenticating - AFTER all hooks
+  if (isLoading || !userId) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading...</p>
+        </div>
+      </div>
+    );
+  }
 
   const handleChoice = (choice) => {
     setHistory((prev) => [
@@ -168,17 +189,13 @@ export default function ValuesGamePage() {
               {/* 🔹 zapis finalValue do backendu i przejście do chatu */}
               <button
                 onClick={async () => {
+                  if (!userId) return; // No user ID available
+                  
                   try {
-                    const res = await fetch(`${API_URL}/values/choose`, {
-                      method: "POST",
-                      headers: { "Content-Type": "application/json" },
-                      body: JSON.stringify({
-                        user_id: userId,
-                        chosen_value: finalValue,
-                      }),
+                    const res = await apiPost(`/values/choose`, {
+                      user_id: userId,
+                      chosen_value: finalValue,
                     });
-
-                    if (!res.ok) throw new Error("Failed to save chosen value");
 
                     const data = await res.json();
                     console.log("Chosen value saved from game:", data);

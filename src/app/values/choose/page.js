@@ -3,21 +3,30 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Button from "components/ui/Button";
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL;
-const userId = "demo-user-123";
+import { useAuth } from "hooks/useAuth";
+import { useApi } from "hooks/useApi";
 
 export default function ValuesChoosePage() {
+  const router = useRouter();
+  const { user, isAuthenticated, isLoading } = useAuth();
+  const { userId, apiGet, apiPost } = useApi();
   const [reducedValues, setReducedValues] = useState([]);
   const [chosenValue, setChosenValue] = useState(null);
-  const router = useRouter();
+
+  // Redirect if not authenticated
+  useEffect(() => {
+    if (!isLoading && !isAuthenticated) {
+      router.push('/');
+    }
+  }, [isLoading, isAuthenticated, router]);
 
   // 🔹 Pobierz wartości z fazy REDUCE
   useEffect(() => {
+    if (!userId) return; // Wait for user ID
+    
     async function fetchReducedValues() {
       try {
-        const res = await fetch(`${API_URL}/values/reduce/${userId}`);
-        if (!res.ok) throw new Error("Failed to fetch reduced values");
+        const res = await apiGet(`/values/reduce/${userId}`);
         const data = await res.json();
 
         const reduced = data?.reduced_values || [];
@@ -27,14 +36,15 @@ export default function ValuesChoosePage() {
       }
     }
     fetchReducedValues();
-  }, []);
+  }, [userId]);
 
   // 🔹 Pobierz wcześniej wybraną wartość, żeby ją podświetlić
   useEffect(() => {
+    if (!userId) return; // Wait for user ID
+    
     async function fetchChosenValue() {
       try {
-        const res = await fetch(`${API_URL}/values/choose/${userId}`);
-        if (!res.ok) return; // brak wyboru jeszcze
+        const res = await apiGet(`/values/choose/${userId}`);
         const data = await res.json();
         if (data?.chosen_value) {
           setChosenValue(data.chosen_value);
@@ -44,20 +54,28 @@ export default function ValuesChoosePage() {
       }
     }
     fetchChosenValue();
-  }, []);
+  }, [userId]);
+
+  // Show loading while authenticating - AFTER all hooks
+  if (isLoading || !userId) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading...</p>
+        </div>
+      </div>
+    );
+  }
 
   const saveChosenValue = async () => {
+    if (!userId) return; // No user ID available
+    
     try {
-      const res = await fetch(`${API_URL}/values/choose`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          user_id: userId,
-          chosen_value: chosenValue,
-        }),
+      const res = await apiPost(`/values/choose`, {
+        user_id: userId,
+        chosen_value: chosenValue,
       });
-
-      if (!res.ok) throw new Error("Failed to save chosen value");
 
       const data = await res.json();
       console.log("Chosen value saved:", data);

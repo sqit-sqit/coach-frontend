@@ -6,18 +6,26 @@ import ChatBubble from "components/ui/ChatBubble";
 import ChatInput from "components/ui/ChatInput";
 import QuickChip from "components/ui/QuickChip";
 import ValuesLayout from "components/layouts/ValuesLayout";
+import { useAuth } from "hooks/useAuth";
+import { useApi } from "hooks/useApi";
 import jsPDF from "jspdf";
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
-const userId = "demo-user-123";
 
 export default function ValuesChatPage() {
   const router = useRouter();
+  const { user, isAuthenticated, isLoading } = useAuth();
+  const { userId, apiPostStream, apiPost, apiGet } = useApi();
   const [messages, setMessages] = useState([]);
   const [chosenValue, setChosenValue] = useState(null);
   const [isStreaming, setIsStreaming] = useState(false);
   const [chatMode, setChatMode] = useState("chat"); // "chat" or "reflect"
   const [sessionSummary, setSessionSummary] = useState(null); // Store summary for PDF download
+
+  // Redirect if not authenticated
+  useEffect(() => {
+    if (!isLoading && !isAuthenticated) {
+      router.push('/');
+    }
+  }, [isLoading, isAuthenticated, router]);
 
   const messagesEndRef = useRef(null);
   const abortControllerRef = useRef(null);
@@ -34,10 +42,11 @@ export default function ValuesChatPage() {
 
   // 🔹 Pobierz wybraną wartość i ustaw startową wiadomość AI
   useEffect(() => {
+    if (!userId) return; // Wait for user ID
+    
     async function fetchChosenValue() {
       try {
-        const res = await fetch(`${API_URL}/values/choose/${userId}`);
-        if (!res.ok) throw new Error("Failed to fetch chosen value");
+        const res = await apiGet(`/values/choose/${userId}`);
         const data = await res.json();
         setChosenValue(data.chosen_value);
 
@@ -59,7 +68,21 @@ export default function ValuesChatPage() {
       }
     }
     fetchChosenValue();
-  }, []);
+  }, [userId]);
+
+  // Show loading while authenticating - AFTER all hooks
+  if (isLoading || !userId) {
+    return (
+      <ValuesLayout>
+        <div className="flex items-center justify-center min-h-screen">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <p className="text-gray-600">Loading...</p>
+          </div>
+        </div>
+      </ValuesLayout>
+    );
+  }
 
   const quickTips = [
     {
@@ -87,7 +110,7 @@ export default function ValuesChatPage() {
 
   // 🔹 Obsługa generowania podsumowania
   const handleGenerateSummary = async () => {
-    if (isStreaming) return; // Prevent concurrent requests
+    if (isStreaming || !userId) return; // Prevent concurrent requests or if no user ID
 
     // Dodaj wiadomość użytkownika "Jump to summary"
     const userMessage = { role: "user", content: "Jump to summary" };
@@ -122,15 +145,9 @@ export default function ValuesChatPage() {
       }
 
       // Wywołaj endpoint generowania podsumowania
-      const res = await fetch(`${API_URL}/values/chat/${userId}/summary`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          chat_history: chatHistory,
-          reflection_history: reflectionHistory
-        }),
+      const res = await apiPost(`/values/chat/${userId}/summary`, {
+        chat_history: chatHistory,
+        reflection_history: reflectionHistory
       });
 
       if (!res.ok) {
@@ -281,7 +298,7 @@ export default function ValuesChatPage() {
   // 🔹 Obsługa wysyłania wiadomości
   const handleSendMessage = async (message, mode = null) => {
     const currentMode = mode || chatMode;
-    if (isStreaming) return; // Prevent concurrent requests
+    if (isStreaming || !userId) return; // Prevent concurrent requests or if no user ID
 
     // Add user message and a placeholder assistant message for streaming
     let assistantIndex = -1;
@@ -299,21 +316,15 @@ export default function ValuesChatPage() {
       const controller = new AbortController();
       abortControllerRef.current = controller;
 
-      const res = await fetch(`${API_URL}/values/chat/${userId}/stream`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "text/event-stream, text/plain, application/json",
-        },
+      const res = await apiPostStream(`/values/chat/${userId}/stream`, {
+        message: message,
+        history: messages.map((m) => ({
+          role: m.role,
+          content: m.content,
+        })),
+        mode: currentMode,
+      }, {
         signal: controller.signal,
-        body: JSON.stringify({
-          message: message,
-          history: messages.map((m) => ({
-            role: m.role,
-            content: m.content,
-          })),
-          mode: currentMode,
-        }),
       });
 
       if (!res.ok) {

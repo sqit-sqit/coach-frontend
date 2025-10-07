@@ -3,22 +3,29 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Button from "components/ui/Button";
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL;
+import { useAuth } from "hooks/useAuth";
+import { useApi } from "hooks/useApi";
 
 export default function ValuesReducePage() {
-  const [selectedValues, setSelectedValues] = useState([]);
   const router = useRouter();
+  const { user, isAuthenticated, isLoading } = useAuth();
+  const { userId, apiGet, apiPost } = useApi();
+  const [selectedValues, setSelectedValues] = useState([]);
+
+  // Redirect if not authenticated
+  useEffect(() => {
+    if (!isLoading && !isAuthenticated) {
+      router.push('/');
+    }
+  }, [isLoading, isAuthenticated, router]);
 
   // Pobierz wartości z fazy SELECT
   useEffect(() => {
+    if (!userId) return; // Wait for user ID
+    
     async function fetchSelectedValues() {
       try {
-        const userId = "demo-user-123";
-        const res = await fetch(`${API_URL}/values/select/${userId}`);
-        if (!res.ok) {
-          throw new Error("Failed to fetch values");
-        }
+        const res = await apiGet(`/values/select/${userId}`);
         const data = await res.json();
 
         // 🔑 poprawna ścieżka
@@ -29,7 +36,19 @@ export default function ValuesReducePage() {
       }
     }
     fetchSelectedValues();
-  }, []);
+  }, [userId]);
+
+  // Show loading while authenticating - AFTER all hooks
+  if (isLoading || !userId) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading...</p>
+        </div>
+      </div>
+    );
+  }
 
   const handleRemove = (value) => {
     setSelectedValues((prev) => prev.filter((v) => v !== value));
@@ -37,18 +56,13 @@ export default function ValuesReducePage() {
 
   // 🔹 Nowa logika zapisu do /values/reduce
   const saveProgress = async () => {
+    if (!userId) return; // No user ID available
+    
     try {
-      const userId = "demo-user-123";
-      const res = await fetch(`${API_URL}/values/reduce`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          user_id: userId,
-          reduced_values: selectedValues,
-        }),
+      const res = await apiPost(`/values/reduce`, {
+        user_id: userId,
+        reduced_values: selectedValues,
       });
-
-      if (!res.ok) throw new Error("Failed to save progress");
 
       const data = await res.json();
       console.log("Progress saved:", data);
