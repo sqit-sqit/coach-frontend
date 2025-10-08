@@ -1,0 +1,222 @@
+"use client";
+
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+
+export default function FeedbackPage() {
+  const router = useRouter();
+  const [rating, setRating] = useState(4);
+  const [likedInput, setLikedInput] = useState("");
+  const [dislikedInput, setDislikedInput] = useState("");
+  const [moreInput, setMoreInput] = useState("");
+  const [selectedLikedChips, setSelectedLikedChips] = useState([]);
+  const [selectedDislikedChips, setSelectedDislikedChips] = useState([]);
+
+  const likedChips = ["AI tone of voice", "Design", "Tournament game"];
+  const dislikedChips = ["AI tone of voice", "Design", "Tournament game"];
+
+  const handleLikedChipClick = (chip) => {
+    if (!selectedLikedChips.includes(chip)) {
+      setSelectedLikedChips([...selectedLikedChips, chip]);
+    }
+  };
+
+  const handleRemoveLikedChip = (chip) => {
+    setSelectedLikedChips(selectedLikedChips.filter(c => c !== chip));
+  };
+
+  const handleDislikedChipClick = (chip) => {
+    if (!selectedDislikedChips.includes(chip)) {
+      setSelectedDislikedChips([...selectedDislikedChips, chip]);
+    }
+  };
+
+  const handleRemoveDislikedChip = (chip) => {
+    setSelectedDislikedChips(selectedDislikedChips.filter(c => c !== chip));
+  };
+
+  const handleSubmit = async () => {
+    // Here you would typically send the feedback to your backend
+    console.log({
+      rating,
+      liked: {
+        text: likedInput,
+        chips: selectedLikedChips
+      },
+      disliked: {
+        text: dislikedInput,
+        chips: selectedDislikedChips
+      },
+      more: moreInput
+    });
+    
+    // Navigate to completion or thank you page
+    alert("Thank you for your feedback!");
+    router.push("/");
+  };
+
+  return (
+    <div className="min-h-screen bg-white flex items-center justify-center p-4 pb-48">
+      <div className="w-[902px] h-[700px] bg-[rgba(70,92,251,0.8)] rounded-[32px] flex flex-col items-start p-[30px_42px] gap-8">
+        {/* Header */}
+        <div className="w-full space-y-3">
+          <h1 className="text-2xl font-bold text-white text-center">
+            Leave us feedback
+          </h1>
+          <p className="text-white text-sm leading-relaxed text-center">
+            Thank you for taking time to do our value workshop. Could you please rate your experience and write us a quick feedback
+          </p>
+          
+          {/* Star Rating */}
+          <div className="flex justify-center space-x-2 mt-4">
+            {[1, 2, 3, 4, 5].map((star) => (
+              <button
+                key={star}
+                onClick={() => setRating(star)}
+                className="focus:outline-none"
+              >
+                <svg
+                  className={`w-6 h-6 ${
+                    star <= rating ? "text-white" : "text-white/30"
+                  }`}
+                  fill="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+                </svg>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* What did you like section */}
+        <div className="w-full space-y-2">
+          <h2 className="text-lg font-semibold text-white">
+            What did you like from the app?
+          </h2>
+          <div className="flex flex-wrap gap-2 border border-white/20 rounded-2xl p-2 bg-white">
+            {selectedLikedChips.map((chip) => (
+              <span
+                key={chip}
+                className="px-3 py-1 rounded-full text-xs font-medium bg-[var(--Chip-Active)] text-gray-900 border-2 border-[#E5B846] cursor-pointer"
+                onClick={() => handleRemoveLikedChip(chip)}
+              >
+                {chip} ✕
+              </span>
+            ))}
+            <input
+              type="text"
+              value={likedInput}
+              onChange={(e) => setLikedInput(e.target.value)}
+              placeholder="Type in or choose from the chips"
+              className="flex-1 outline-none px-2 text-gray-800 placeholder-gray-400 text-sm"
+            />
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {likedChips.map((chip) => (
+              <button
+                key={chip}
+                onClick={() => handleLikedChipClick(chip)}
+                disabled={selectedLikedChips.includes(chip)}
+                className={`px-3 py-1 rounded-full text-xs font-medium border-2 transition-all hover:scale-105 ${
+                  selectedLikedChips.includes(chip)
+                    ? "bg-white/20 text-white border-white/50 cursor-not-allowed"
+                    : "bg-[var(--Chip-Active)] text-gray-900 border-[#E5B846]"
+                }`}
+              >
+                {chip}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* What did you NOT like section */}
+        <div className="w-full space-y-2">
+          <h2 className="text-lg font-semibold text-white">
+            What did you NOT like?
+          </h2>
+          <div className="flex flex-wrap gap-2 border border-white/20 rounded-2xl p-2 bg-white">
+            {selectedDislikedChips.map((chip) => (
+              <span
+                key={chip}
+                className="px-3 py-1 rounded-full text-xs font-medium bg-[var(--Chip-Active)] text-gray-900 border-2 border-[#E5B846] cursor-pointer"
+                onClick={() => handleRemoveDislikedChip(chip)}
+              >
+                {chip} ✕
+              </span>
+            ))}
+            <input
+              type="text"
+              value={dislikedInput}
+              onChange={(e) => setDislikedInput(e.target.value)}
+              placeholder="Type in or choose from the chips"
+              className="flex-1 outline-none px-2 text-gray-800 placeholder-gray-400 text-sm"
+            />
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {dislikedChips.map((chip) => (
+              <button
+                key={chip}
+                onClick={() => handleDislikedChipClick(chip)}
+                disabled={selectedDislikedChips.includes(chip)}
+                className={`px-3 py-1 rounded-full text-xs font-medium border-2 transition-all hover:scale-105 ${
+                  selectedDislikedChips.includes(chip)
+                    ? "bg-white/20 text-white border-white/50 cursor-not-allowed"
+                    : "bg-[var(--Chip-Active)] text-gray-900 border-[#E5B846]"
+                }`}
+              >
+                {chip}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Tell us more section */}
+        <div className="w-full space-y-2">
+          <h2 className="text-lg font-semibold text-white">
+            Tell us more
+          </h2>
+          <textarea
+            value={moreInput}
+            onChange={(e) => setMoreInput(e.target.value)}
+            placeholder="Type in the text"
+            rows={3}
+            className="w-full px-3 py-2 rounded-2xl bg-white text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-white/50 resize-none text-sm"
+          />
+        </div>
+
+        {/* Submit button */}
+        <div className="w-full flex justify-center pt-4">
+          <button
+            onClick={handleSubmit}
+            className="w-full bg-[#8C8CFF] hover:bg-[#7A7AFF] text-white font-semibold py-3 px-6 rounded-2xl transition-colors focus:outline-none focus:ring-2 focus:ring-white/50 text-sm"
+          >
+            Send the review
+          </button>
+        </div>
+
+        {/* Buy me a coffee section */}
+        <div className="w-full pt-8 pb-16">
+          <div className="bg-gray-100 rounded-3xl p-6 shadow-lg text-center space-y-4">
+            <h3 className="text-xl font-bold text-gray-900">
+              Loved the app?
+            </h3>
+            <p className="text-gray-700 text-sm leading-relaxed">
+              Thanks for being here. If you'd like to support our mission, buy us a coffee and help us keep building this space for reflection.
+            </p>
+            <button
+              onClick={() => {
+                // Here you would integrate with your payment system
+                console.log("Buy me a coffee clicked");
+                alert("Thank you for your support! ☕");
+              }}
+              className="bg-[#FFDD00] hover:bg-[#FFE55C] text-gray-900 font-semibold py-3 px-6 rounded-2xl transition-colors focus:outline-none focus:ring-2 focus:ring-gray-300 text-sm"
+            >
+              Buy us a coffee
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}

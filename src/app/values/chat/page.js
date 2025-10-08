@@ -291,8 +291,8 @@ export default function ValuesChatPage() {
 
   // 🔹 Zakończenie sesji
   const handleFinishSession = () => {
-    // Navigate to dashboard or home
-    router.push('/dashboard');
+    // Navigate to feedback page
+    router.push('/feedback');
   };
 
   // 🔹 Obsługa wysyłania wiadomości
