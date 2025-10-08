@@ -1,10 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { useAuth } from "hooks/useAuth";
+import { useApi } from "hooks/useApi";
 
 export default function FeedbackPage() {
   const router = useRouter();
+  const { user, isAuthenticated, isLoading } = useAuth();
+  const { userId, apiPost } = useApi();
   const [rating, setRating] = useState(4);
   const [likedInput, setLikedInput] = useState("");
   const [dislikedInput, setDislikedInput] = useState("");
@@ -14,6 +18,25 @@ export default function FeedbackPage() {
 
   const likedChips = ["AI tone of voice", "Design", "Tournament game"];
   const dislikedChips = ["AI tone of voice", "Design", "Tournament game"];
+
+  // Redirect if not authenticated
+  useEffect(() => {
+    if (!isLoading && !isAuthenticated) {
+      router.push('/');
+    }
+  }, [isLoading, isAuthenticated, router]);
+
+  // Show loading while authenticating
+  if (isLoading || !userId) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading...</p>
+        </div>
+      </div>
+    );
+  }
 
   const handleLikedChipClick = (chip) => {
     if (!selectedLikedChips.includes(chip)) {
@@ -36,23 +59,34 @@ export default function FeedbackPage() {
   };
 
   const handleSubmit = async () => {
-    // Here you would typically send the feedback to your backend
-    console.log({
-      rating,
-      liked: {
-        text: likedInput,
-        chips: selectedLikedChips
-      },
-      disliked: {
-        text: dislikedInput,
-        chips: selectedDislikedChips
-      },
-      more: moreInput
-    });
-    
-    // Navigate to completion or thank you page
-    alert("Thank you for your feedback!");
-    router.push("/");
+    if (!userId) {
+      alert("User not authenticated");
+      return;
+    }
+
+    try {
+      const response = await apiPost(`/values/feedback`, {
+        user_id: userId,
+        rating: rating,
+        liked_text: likedInput,
+        liked_chips: selectedLikedChips,
+        disliked_text: dislikedInput,
+        disliked_chips: selectedDislikedChips,
+        additional_feedback: moreInput
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log("Feedback saved:", data);
+        alert("Thank you for your feedback! Your input helps us improve the app.");
+        router.push("/");
+      } else {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+    } catch (error) {
+      console.error("Error submitting feedback:", error);
+      alert("Could not submit feedback. Please try again.");
+    }
   };
 
   return (
