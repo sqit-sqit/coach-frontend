@@ -168,7 +168,7 @@ export default function ValuesSelectPage() {
           onClick={async () => {
             try {
               // const res = await fetch("http://localhost:8000/values/list");
-              const res = await fetch(`${API_URL}/values/list`);
+              const res = await apiGet(`/values/list`);
               if (!res.ok) throw new Error("Failed to fetch values");
               const data = await res.json();
 
