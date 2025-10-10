@@ -11,6 +11,7 @@ export default function ValuesReducePage() {
   const { user, isAuthenticated, isLoading } = useAuth();
   const { userId, apiGet, apiPost } = useApi();
   const [selectedValues, setSelectedValues] = useState([]);
+  const [removedValues, setRemovedValues] = useState([]); // Stack of removed values for undo
 
   // Redirect if not authenticated
   useEffect(() => {
@@ -52,6 +53,15 @@ export default function ValuesReducePage() {
 
   const handleRemove = (value) => {
     setSelectedValues((prev) => prev.filter((v) => v !== value));
+    setRemovedValues((prev) => [value, ...prev]); // Add to beginning of array (stack)
+  };
+
+  const handleUndo = () => {
+    if (removedValues.length > 0) {
+      const [lastRemoved, ...rest] = removedValues;
+      setSelectedValues((prev) => [...prev, lastRemoved]);
+      setRemovedValues(rest);
+    }
   };
 
   // 🔹 Nowa logika zapisu do /values/reduce
@@ -90,8 +100,14 @@ export default function ValuesReducePage() {
         Now remove some values so you have 10 values left
       </h1>
       <p className="text-gray-600">
-        You can unchoose chips by clicking on them. Once you get down to 10,
-        you can move on.
+      Next step:<br />
+      Take a moment to reflect on which values feel most essential to you. 
+      From the list you created earlier, begin letting go of those that feel less important, 
+      one by one, until you’re left with no more than ten core values — the ones that truly represent 
+      what matters most in your life.<br />
+      <br />
+      You can unchoose chips by clicking on them. Once you get down to 10,
+      you can move on.
       </p>
 
       {/* Wybrane wartości */}
@@ -117,7 +133,21 @@ export default function ValuesReducePage() {
         {selectedValues.length} out of 10 values
       </div>
 
-      <div className="flex justify-end mt-8">
+      <div className="flex justify-between items-center mt-8">
+        {/* Undo button */}
+        <button
+          onClick={handleUndo}
+          disabled={removedValues.length === 0}
+          className={`transition ${
+            removedValues.length === 0
+              ? 'text-gray-300 cursor-not-allowed'
+              : 'text-gray-500 hover:underline'
+          }`}
+        >
+          ↺ Undo
+        </button>
+
+        {/* Next button */}
         <Button
           onClick={saveProgress}
           text="Next →"

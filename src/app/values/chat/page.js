@@ -40,7 +40,7 @@ export default function ValuesChatPage() {
     }
   }, [messages]);
 
-  // 🔹 Pobierz wybraną wartość i ustaw startową wiadomość AI
+  // 🔹 Pobierz wybraną wartość
   useEffect(() => {
     if (!userId) return; // Wait for user ID
     
@@ -49,14 +49,6 @@ export default function ValuesChatPage() {
         const res = await apiGet(`/values/choose/${userId}`);
         const data = await res.json();
         setChosenValue(data.chosen_value);
-
-        setMessages([
-          {
-            role: "assistant",
-            title: `${data.chosen_value} value workshop`,
-            content: `Let's explore why "${data.chosen_value}" is important to you and how it influences your decisions. What makes this value especially meaningful to you?`,
-          },
-        ]);
       } catch (err) {
         console.error("Error fetching chosen value:", err);
         setMessages([
@@ -69,6 +61,14 @@ export default function ValuesChatPage() {
     }
     fetchChosenValue();
   }, [userId]);
+
+  // 🔹 Automatycznie generuj pierwszą wiadomość AI gdy chosenValue jest ustawiony
+  useEffect(() => {
+    if (!chosenValue || messages.length > 0) return; // Skip if no value or messages already exist
+    
+    // Generate first AI message
+    generateFirstAIMessage();
+  }, [chosenValue]); // Trigger when chosenValue changes
 
   // Show loading while authenticating - AFTER all hooks
   if (isLoading || !userId) {
@@ -104,8 +104,8 @@ export default function ValuesChatPage() {
     // Przełącz tryb na "reflect"
     setChatMode("reflect");
     
-    // Wyślij wiadomość z nowym trybem (handleSendMessage doda wiadomość użytkownika)
-    await handleSendMessage("go to the next step", "reflect");
+    // Wyślij pustą wiadomość aby AI zaczęło od intro (podobnie jak w trybie chat)
+    await generateReflectFirstMessage();
   };
 
   // 🔹 Obsługa generowania podsumowania
@@ -293,6 +293,157 @@ export default function ValuesChatPage() {
   const handleFinishSession = () => {
     // Navigate to feedback page
     router.push('/feedback');
+  };
+
+  // 🔹 Generate first AI message automatically
+  const generateFirstAIMessage = async () => {
+    if (isStreaming || !userId || !chosenValue) return;
+
+    const placeholderMessage = { role: "assistant", content: "", isGenerating: true };
+    setMessages([placeholderMessage]);
+    setIsStreaming(true);
+
+    try {
+      const controller = new AbortController();
+      abortControllerRef.current = controller;
+
+      // Send empty message to trigger AI's first response
+      const res = await apiPostStream(`/values/chat/${userId}/stream`, {
+        message: "", // Empty message to trigger AI's first response
+        history: [], // No history for first message
+        mode: "chat",
+      }, {
+        signal: controller.signal,
+      });
+
+      if (!res.ok) {
+        throw new Error(`HTTP error! status: ${res.status}`);
+      }
+
+      const contentType = res.headers.get("content-type") || "";
+
+      // Handle streaming response
+      if (res.body && !contentType.includes("application/json")) {
+        const reader = res.body.getReader();
+        const decoder = new TextDecoder();
+        let accumulatedContent = "";
+
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          const chunk = decoder.decode(value, { stream: true });
+          accumulatedContent += chunk;
+
+          setMessages([{
+            role: "assistant",
+            content: accumulatedContent,
+            isGenerating: false,
+          }]);
+        }
+      } else {
+        // Fallback to JSON response
+        const data = await res.json();
+        setMessages([{
+          role: "assistant",
+          content: data.reply || "Welcome to your values workshop!",
+          isGenerating: false,
+        }]);
+      }
+    } catch (error) {
+      console.error("Error generating first AI message:", error);
+      setMessages([{
+        role: "assistant",
+        content: "Welcome to your values workshop! Let's begin exploring your chosen value.",
+        isGenerating: false,
+      }]);
+    } finally {
+      setIsStreaming(false);
+      abortControllerRef.current = null;
+    }
+  };
+
+  // 🔹 Generate first reflection message when switching to reflect mode
+  const generateReflectFirstMessage = async () => {
+    if (isStreaming || !userId || !chosenValue) return;
+
+    const placeholderMessage = { role: "assistant", content: "", isGenerating: true };
+    setMessages(prev => [...prev, placeholderMessage]);
+    setIsStreaming(true);
+
+    try {
+      const controller = new AbortController();
+      abortControllerRef.current = controller;
+
+      // Send empty message to trigger AI's first reflection response
+      const res = await apiPostStream(`/values/chat/${userId}/stream`, {
+        message: "", // Empty message to trigger AI's first reflection response
+        history: messages.map((m) => ({
+          role: m.role,
+          content: m.content,
+        })),
+        mode: "reflect",
+      }, {
+        signal: controller.signal,
+      });
+
+      if (!res.ok) {
+        throw new Error(`HTTP error! status: ${res.status}`);
+      }
+
+      const contentType = res.headers.get("content-type") || "";
+
+      // Handle streaming response
+      if (res.body && !contentType.includes("application/json")) {
+        const reader = res.body.getReader();
+        const decoder = new TextDecoder();
+        let accumulatedContent = "";
+
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          const chunk = decoder.decode(value, { stream: true });
+          accumulatedContent += chunk;
+
+          setMessages(prev => {
+            const updated = [...prev];
+            updated[updated.length - 1] = {
+              role: "assistant",
+              content: accumulatedContent,
+              isGenerating: false,
+            };
+            return updated;
+          });
+        }
+      } else {
+        // Fallback to JSON response
+        const data = await res.json();
+        setMessages(prev => {
+          const updated = [...prev];
+          updated[updated.length - 1] = {
+            role: "assistant",
+            content: data.reply || "Let's reflect on your values workshop experience.",
+            isGenerating: false,
+          };
+          return updated;
+        });
+      }
+    } catch (error) {
+      console.error("Error generating first reflection message:", error);
+      setMessages(prev => {
+        const updated = [...prev];
+        updated[updated.length - 1] = {
+          role: "assistant",
+          content: "Let's reflect on your values workshop experience.",
+          isGenerating: false,
+        };
+        return updated;
+      });
+    } finally {
+      setIsStreaming(false);
+      abortControllerRef.current = null;
+    }
   };
 
   // 🔹 Obsługa wysyłania wiadomości

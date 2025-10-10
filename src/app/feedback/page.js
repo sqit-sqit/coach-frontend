@@ -59,21 +59,38 @@ export default function FeedbackPage() {
   };
 
   const handleSubmit = async () => {
+    console.log("=== FEEDBACK DEBUG ===");
+    console.log("userId:", userId);
+    console.log("isAuthenticated:", isAuthenticated);
+    console.log("rating:", rating);
+    console.log("selectedLikedChips:", selectedLikedChips);
+    console.log("likedInput:", likedInput);
+    
     if (!userId) {
+      console.log("ERROR: No userId");
       alert("User not authenticated");
       return;
     }
 
+    const feedbackData = {
+      user_id: userId,
+      rating: rating,
+      liked_text: likedInput,
+      liked_chips: selectedLikedChips,
+      disliked_text: dislikedInput,
+      disliked_chips: selectedDislikedChips,
+      additional_feedback: moreInput
+    };
+    
+    console.log("Sending feedback data:", feedbackData);
+    console.log("apiPost function:", typeof apiPost);
+
     try {
-      const response = await apiPost(`/values/feedback`, {
-        user_id: userId,
-        rating: rating,
-        liked_text: likedInput,
-        liked_chips: selectedLikedChips,
-        disliked_text: dislikedInput,
-        disliked_chips: selectedDislikedChips,
-        additional_feedback: moreInput
-      });
+      console.log("Calling apiPost...");
+      const response = await apiPost(`/values/feedback`, feedbackData);
+      console.log("Response received:", response);
+      console.log("Response status:", response.status);
+      console.log("Response ok:", response.ok);
 
       if (response.ok) {
         const data = await response.json();
@@ -81,6 +98,8 @@ export default function FeedbackPage() {
         alert("Thank you for your feedback! Your input helps us improve the app.");
         router.push("/");
       } else {
+        const errorText = await response.text();
+        console.error("Error response:", errorText);
         throw new Error(`HTTP error! status: ${response.status}`);
       }
     } catch (error) {

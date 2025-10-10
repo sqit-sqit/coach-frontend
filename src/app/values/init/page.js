@@ -5,6 +5,7 @@ import { useSearchParams, useRouter } from "next/navigation";
 import Button from "components/ui/Button";
 import Heading from "components/ui/Heading";
 import BackButton from "components/ui/BackButton";
+import ExpandableInfo from "components/ui/ExpandableInfo";
 import { Search, MessageSquare, Pause, Mail } from "lucide-react";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "";
@@ -101,13 +102,39 @@ function InitContent() {
       {step === 1 && (
         <div className="space-y-6 mt-10">
           <Heading level={1}>Welcome to Your Values Journey</Heading>
-          <p className="text-lg text-gray-700">Let’s explore your values together.</p>
+          <p className="text-lg text-gray-700">Explore your values.</p>
           <p className="text-gray-600 max-w-2xl mx-auto">
-            Through short, guided conversations with AI, you’ll uncover what’s
-            important to you, reflect on why, and see how it shows up in your
-            daily life. Think of it as a friendly guide, not a test.
+          Through short, guided conversations, you’ll uncover what’s important to you, 
+          reflect on why, and see how it shows up in your daily life. Think of it as a friendly guide
+           not a test.
           </p>
-          <div className="mt-8 flex justify-center">
+
+          {/* Why question expandable */}
+          <ExpandableInfo 
+            title='Why knowing values is "valuable"?' 
+            icon="?"
+            className="mt-6"
+          >
+            <p>
+              What is one of the most important question you can ask yourself? That question is: "Why?"
+            </p>
+            <ul className="list-disc list-inside space-y-1 ml-4">
+              <li>Why do I do what I do?</li>
+              <li>Why do I make these particular decisions?</li>
+              <li>Why do I choose one thing over another?</li>
+            </ul>
+            <p>
+              The deepest reasons that drive these choices are often hidden in our subconscious, shaped by our past, experiences, and life events. But these hidden dynamics shape something we call our value system—a set of values that are so important in life that they guide our behavior. And that we can recognize on a conscious level.
+            </p>
+            <p>
+              Understanding your value system is the first step to understanding yourself. What drives me. What matters to me in life. How that influences my life priorities.
+            </p>
+            <p>
+              If this feels important to you, carve out up to half an hour just for yourself and explore what fuels you.
+            </p>
+          </ExpandableInfo>
+
+          <div className="mt-12 flex justify-center">
             <Button onClick={() => saveProgress(2)} text="Start →" />
           </div>
         </div>
@@ -138,7 +165,7 @@ function InitContent() {
               <MessageSquare className="w-12 h-12 text-brand mb-4" strokeWidth={1.5} />
               <p className="font-semibold mb-2">2. Understand your why</p>
               <p className="text-sm text-gray-600">
-                Reflect with AI to understand the deeper reasons why your values
+                Reflect to understand the deeper reasons why your values
                 shape who you are.
               </p>
             </div>
@@ -160,6 +187,45 @@ function InitContent() {
             </div>
           </div>
 
+          {/* Know more about value workshop expandable */}
+          <ExpandableInfo 
+            title="Know more about value workshop" 
+            icon="i"
+            className="mt-8"
+          >
+            <p>
+              <strong>What is a value workshop?</strong><br />
+              A value workshop is a structured process designed to help you identify, explore, and understand your core personal values. It's a journey of self-discovery that reveals what truly matters to you in life.
+            </p>
+    
+            <p>
+              <strong>How does it work?</strong><br />
+              Through guided questions and AI-powered conversations, you'll explore your motivations, decisions, and life priorities. The process helps bring unconscious values to the surface where you can examine and understand them.
+            </p>
+            <p>
+              <strong>What will you gain?</strong><br />
+              By the end of this workshop, you'll have a clearer understanding of your value system, how it influences your decisions, and what drives you in life. This awareness can help you make more aligned choices and live with greater purpose.
+            </p>
+            <p>
+              <strong>IMPORTANT: What kind of experience to expect?</strong>
+            </p>
+            <p>
+              Please note this is a <strong>coaching session</strong> — a space designed to help you explore, reflect, and connect with what truly matters to you.
+              You can expect thoughtful questions that may challenge your usual ways of thinking and gently lead you toward new insights about yourself.
+            </p>
+            <p>
+              This is <strong>not mentoring</strong> — you won't receive direct advice or instructions on what to do with your values.
+              Instead, the goal is to help you gain clarity and awareness, so you can understand yourself more deeply.
+            </p>
+            <p>
+              At the end, you'll receive a short summary with reflections and inspirations — not as prescriptions, but as gentle guidance to help you integrate what you've discovered into your own life.
+            </p>
+            <p>
+              <strong>Time commitment:</strong><br />
+              Plan for about 30 minutes of focused reflection. This is time just for you to explore what fuels and motivates you.
+            </p>
+          </ExpandableInfo>
+
           <div className="mt-10 flex justify-center">
             <Button onClick={() => saveProgress(3)} text="Next →" />
           </div>
@@ -176,7 +242,7 @@ function InitContent() {
             Everything you write here is{" "}
             <span className="font-semibold">private and confidential</span>. Your
             answers are never sold, shared, or used for advertising. You control
-            your data at every step, including the option to skip or delete.
+            your data at every step, as everything you provide is optional.
           </p>
 
           <div className="flex items-center justify-center mb-10 space-x-2">
@@ -210,8 +276,7 @@ function InitContent() {
         <div className="max-w-2xl mx-auto text-left space-y-8 mt-20">
           <Heading level={1}>Tell us a little about yourself</Heading>
           <p className="text-gray-600">
-            Before you start, we’d like to know a bit about you. This way, we can make
-            the experience more relevant. Don’t worry, you can skip anything you don’t
+            Before you start, we’d like to know a bit about you. This way, we can adjust the session more to your profile. Don’t worry, you can skip anything you don’t
             feel like answering.
           </p>
 

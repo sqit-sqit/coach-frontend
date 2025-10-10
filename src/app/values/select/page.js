@@ -108,8 +108,10 @@ export default function ValuesSelectPage() {
         Choose values that feel important for you
       </h1>
       <p className="text-gray-600">
-        Pick the values that resonate with you. You can also add your own by
-        typing them in the box.
+        STEP ONE:<br />
+        Gather values that resonate with you. Type them in or select them from the randomly chosen list.
+        Click "Refresh" if you'd like to generate a new set.
+        Choose as many as you wish, but try not to exceed twenty.
       </p>
 
       {/* Wybrane wartości */}
@@ -138,6 +140,11 @@ export default function ValuesSelectPage() {
               }
             }}
           />
+        </div>
+        
+        {/* Licznik wybranych wartości */}
+        <div className="text-sm text-gray-500 text-left">
+          {selectedValues.length} value{selectedValues.length !== 1 ? 's' : ''} selected
         </div>
       </div>
 

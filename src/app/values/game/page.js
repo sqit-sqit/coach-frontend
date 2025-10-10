@@ -21,6 +21,7 @@ export default function ValuesGamePage() {
   const [totalWinners, setTotalWinners] = useState(0);
   const [completedPairs, setCompletedPairs] = useState(0);
   const [totalPairs, setTotalPairs] = useState(0);
+  const [valueDescriptions, setValueDescriptions] = useState({});
   const TOTAL_ROUNDS = 8;
 
   // Redirect if not authenticated
@@ -29,6 +30,40 @@ export default function ValuesGamePage() {
       router.push('/');
     }
   }, [isLoading, isAuthenticated, router]);
+
+  // Load value descriptions
+  useEffect(() => {
+    const loadValueDescriptions = async () => {
+      try {
+        const response = await fetch('/values_with_descriptions.md');
+        const text = await response.text();
+        
+        // Parse the markdown table
+        const lines = text.split('\n').filter(line => line.trim() && line.includes('|'));
+        const descriptions = {};
+        
+        lines.forEach(line => {
+          const parts = line.split('|').map(part => part.trim()).filter(part => part);
+          if (parts.length >= 2 && parts[0] !== '**Value**') {
+            const value = parts[0].replace(/\*\*/g, '').trim();
+            const description = parts[1].replace(/\*\*/g, '').trim();
+            descriptions[value] = description;
+          }
+        });
+        
+        setValueDescriptions(descriptions);
+      } catch (error) {
+        console.error('Error loading value descriptions:', error);
+      }
+    };
+
+    loadValueDescriptions();
+  }, []);
+
+  // Helper function to get description for a value
+  const getValueDescription = (value) => {
+    return valueDescriptions[value] || "Select the values that matter most to you as a foundation for your journey.";
+  };
 
   // 👇 fetch values (globalnie)
   const fetchValues = async () => {
@@ -180,8 +215,7 @@ export default function ValuesGamePage() {
                 <div className="w-full p-6 bg-[var(--Background-yellow)] border border-[var(--Primary-7-main)] rounded-[24px] shadow">
                   <h2 className="text-2xl font-bold mb-2">{finalValue}</h2>
                   <p className="text-gray-600">
-                    Select the values that matter most to you as a foundation for
-                    your journey.
+                    {getValueDescription(finalValue)}
                   </p>
                 </div>
               </motion.div>
@@ -286,8 +320,7 @@ export default function ValuesGamePage() {
                 >
                   <h3 className="text-lg sm:text-xl font-bold mb-2">{left}</h3>
                   <p className="text-sm text-gray-600">
-                    Select the values that matter most to you as a foundation for
-                    your journey.
+                    {getValueDescription(left)}
                   </p>
                 </div>
 
@@ -300,8 +333,7 @@ export default function ValuesGamePage() {
                 >
                   <h3 className="text-lg sm:text-xl font-bold mb-2">{right}</h3>
                   <p className="text-sm text-gray-600">
-                    Select the values that matter most to you as a foundation for
-                    your journey.
+                    {getValueDescription(right)}
                   </p>
                 </div>
               </motion.div>
