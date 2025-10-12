@@ -29,19 +29,19 @@ export default function Header() {
         </div>
 
         {/* Prawa strona – menu */}
-        <div className="space-x-4">
-          <Link href="/">Home</Link>
+        <div className="flex items-center space-x-4">
+          <Link href="/" className="hover:text-gray-600 transition">Home</Link>
           {isLoading ? (
             <span className="text-gray-500">Loading...</span>
           ) : isAuthenticated ? (
             <>
-              <Link href="/dashboard">Dashboard</Link>
+              <Link href="/dashboard" className="hover:text-gray-600 transition">Dashboard</Link>
               <span className="text-gray-600 font-medium">
-                Welcome, {user?.name || 'User'}
+                {user?.name || 'User'}
               </span>
               <button
                 onClick={logout}
-                className="bg-gray-600 text-white px-3 py-1 rounded text-sm hover:bg-gray-700"
+                className="bg-gray-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-gray-700 transition"
               >
                 Logout
               </button>
@@ -49,7 +49,7 @@ export default function Header() {
           ) : (
             <button
               onClick={handleGoogleLogin}
-              className="bg-blue-600 text-white px-3 py-1 rounded text-sm hover:bg-blue-700"
+              className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-700 transition"
             >
               Sign in
             </button>

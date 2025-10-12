@@ -6,6 +6,7 @@ import Button from "components/ui/Button";
 import Heading from "components/ui/Heading";
 import BackButton from "components/ui/BackButton";
 import ExpandableInfo from "components/ui/ExpandableInfo";
+import AuthChoiceModal from "components/AuthChoiceModal";
 import { Search, MessageSquare, Pause, Mail } from "lucide-react";
 import { useAuth } from "hooks/useAuth";
 import { getCurrentUserId } from "lib/guestUser";
@@ -22,13 +23,35 @@ function InitContent() {
 
   // Use authenticated user ID or create/get guest ID
   const [userId, setUserId] = useState(null);
+  const [showAuthModal, setShowAuthModal] = useState(false);
   
   useEffect(() => {
     if (!isLoading) {
-      const id = getCurrentUserId(authUserId);
-      setUserId(id);
+      const hasGuestId = typeof window !== 'undefined' && localStorage.getItem('guest_user_id');
+      
+      // Jeśli nie ma ani auth ani guest_id - pokaż modal
+      if (!authUserId && !hasGuestId) {
+        setShowAuthModal(true);
+        // NIE ustawiaj userId - czekamy na wybór użytkownika
+      } else {
+        // Ma auth lub guest_id - ustaw userId
+        const id = getCurrentUserId(authUserId);
+        setUserId(id);
+      }
     }
   }, [authUserId, isLoading]);
+  
+  // Handlers dla modal
+  const handleContinueAsGuest = () => {
+    // Dopiero TERAZ utwórz guest_id
+    const id = getCurrentUserId(null); // null = utworzy nowy guest_id
+    setUserId(id);
+    setShowAuthModal(false);
+  };
+  
+  const handleSignIn = () => {
+    window.location.href = `${API_URL}/auth/google`;
+  };
   const initialStep = parseInt(searchParams.get("step") || "1", 10);
   const [step, setStep] = useState(initialStep);
 
@@ -107,9 +130,18 @@ function InitContent() {
   };
 
   return (
-    <div className="max-w-3xl mx-auto p-6 text-center relative">
-      {/* Back button */}
-      <div className="absolute top-4 left-4">
+    <>
+      {/* Auth Choice Modal */}
+      {showAuthModal && (
+        <AuthChoiceModal 
+          onContinueAsGuest={handleContinueAsGuest}
+          onSignIn={handleSignIn}
+        />
+      )}
+      
+      <div className="max-w-3xl mx-auto p-6 text-center relative">
+        {/* Back button */}
+        <div className="absolute top-4 left-4">
         {step > 1 ? (
           <BackButton onClick={() => saveProgress(step - 1)} />
         ) : (
@@ -413,6 +445,7 @@ function InitContent() {
         </div>
       )}
     </div>
+    </>
   );
 }
 
