@@ -83,6 +83,13 @@ export default function DashboardPage() {
   const handleDeleteAccount = async () => {
     setIsDeleting(true);
     try {
+      console.log('=== DELETE ACCOUNT DEBUG ===');
+      console.log('Token exists:', !!token);
+      console.log('Token value:', token ? token.substring(0, 20) + '...' : 'MISSING');
+      console.log('User ID:', userId);
+      console.log('API URL:', API_URL);
+      console.log('Full URL:', `${API_URL}/auth/delete-account`);
+      
       const response = await fetch(`${API_URL}/auth/delete-account`, {
         method: 'DELETE',
         headers: {
@@ -91,19 +98,39 @@ export default function DashboardPage() {
         }
       });
 
+      console.log('Response status:', response.status);
+      console.log('Response ok:', response.ok);
+      
       if (!response.ok) {
-        throw new Error('Failed to delete account');
+        const responseText = await response.text();
+        console.error('Response text:', responseText);
+        
+        let errorData;
+        try {
+          errorData = JSON.parse(responseText);
+        } catch {
+          errorData = { detail: responseText || 'Unknown error' };
+        }
+        
+        console.error('Error data:', errorData);
+        throw new Error(errorData.detail || 'Failed to delete account');
       }
+
+      const successData = await response.json();
+      console.log('Success:', successData);
 
       // Clear all local data
       localStorage.clear();
       
       // Redirect to home
       alert('Your account has been successfully deleted. We\'re sorry to see you go!');
-      router.push('/');
+      window.location.href = '/';
     } catch (error) {
-      console.error('Error deleting account:', error);
-      alert('An error occurred while deleting your account. Please try again or contact support.');
+      console.error('=== DELETE ACCOUNT ERROR ===');
+      console.error('Error type:', error.constructor.name);
+      console.error('Error message:', error.message);
+      console.error('Error stack:', error.stack);
+      alert(`An error occurred while deleting your account: ${error.message}\n\nPlease try again or contact support.`);
       setIsDeleting(false);
       setShowDeleteModal(false);
     }
@@ -232,7 +259,7 @@ export default function DashboardPage() {
         <h2 className="text-xl font-semibold mb-4 text-gray-900">
           {dashboardData && dashboardData.total_sessions > 0 ? 'Start New Workshop' : 'Your Coaching Tools'}
         </h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         {/* 🔹 Warsztat wartości */}
         <Link href="/values/init">
           <div
@@ -290,7 +317,7 @@ export default function DashboardPage() {
             </p>
           </div>
         </Link>
-        </div>
+      </div>
       </div>
 
       {/* Delete Account Section */}
@@ -300,13 +327,14 @@ export default function DashboardPage() {
           <p className="text-sm text-gray-600 mb-4">
             Once you delete your account, there is no going back. Please be certain.
           </p>
-          <button
-            onClick={() => setShowDeleteModal(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-red-50 text-red-600 border-2 border-red-200 rounded-lg hover:bg-red-100 hover:border-red-300 transition font-semibold"
-          >
-            <Trash2 className="w-4 h-4" />
-            Delete Account
-          </button>
+            <button
+              onClick={() => setShowDeleteModal(true)}
+              className="flex items-center gap-2 px-4 py-2 bg-red-50 text-red-600 border-2 border-red-200 rounded-lg hover:bg-red-100 hover:border-red-300 transition font-semibold disabled:opacity-50"
+              disabled={isDeleting}
+            >
+              <Trash2 className="w-4 h-4" />
+              {isDeleting ? 'Deleting...' : 'Delete Account'}
+            </button>
         </div>
       </div>
 
