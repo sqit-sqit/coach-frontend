@@ -6,11 +6,12 @@ import { motion, AnimatePresence } from "framer-motion";
 import Button from "components/ui/Button";
 import { useAuth } from "hooks/useAuth";
 import { useApi } from "hooks/useApi";
+import { getCurrentUserId } from "lib/guestUser";
 
 export default function ValuesGamePage() {
   const router = useRouter();
   const { user, isAuthenticated, isLoading } = useAuth();
-  const { userId, apiGet, apiPost } = useApi();
+  const { userId: authUserId } = useApi();
   const [round, setRound] = useState([]);
   const [winners, setWinners] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -23,13 +24,16 @@ export default function ValuesGamePage() {
   const [totalPairs, setTotalPairs] = useState(0);
   const [valueDescriptions, setValueDescriptions] = useState({});
   const TOTAL_ROUNDS = 8;
-
-  // Redirect if not authenticated
+  
+  // Use authenticated user ID or guest ID
+  const [userId, setUserId] = useState(null);
+  
   useEffect(() => {
-    if (!isLoading && !isAuthenticated) {
-      router.push('/');
+    if (!isLoading) {
+      const id = getCurrentUserId(authUserId);
+      setUserId(id);
     }
-  }, [isLoading, isAuthenticated, router]);
+  }, [authUserId, isLoading]);
 
   // Load value descriptions
   useEffect(() => {
@@ -71,7 +75,8 @@ export default function ValuesGamePage() {
     
     try {
       setLoading(true);
-      const res = await apiGet(`/values/reduce/${userId}`);
+      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+      const res = await fetch(`${API_URL}/values/reduce/${userId}`);
       const data = await res.json();
       const reduced = data?.reduced_values || [];
 
@@ -226,9 +231,14 @@ export default function ValuesGamePage() {
                   if (!userId) return; // No user ID available
                   
                   try {
-                    const res = await apiPost(`/values/choose`, {
-                      user_id: userId,
-                      chosen_value: finalValue,
+                    const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+                    const res = await fetch(`${API_URL}/values/choose`, {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({
+                        user_id: userId,
+                        chosen_value: finalValue,
+                      }),
                     });
 
                     const data = await res.json();

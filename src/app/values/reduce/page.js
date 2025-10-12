@@ -5,20 +5,24 @@ import { useRouter } from "next/navigation";
 import Button from "components/ui/Button";
 import { useAuth } from "hooks/useAuth";
 import { useApi } from "hooks/useApi";
+import { getCurrentUserId } from "lib/guestUser";
 
 export default function ValuesReducePage() {
   const router = useRouter();
   const { user, isAuthenticated, isLoading } = useAuth();
-  const { userId, apiGet, apiPost } = useApi();
+  const { userId: authUserId } = useApi();
   const [selectedValues, setSelectedValues] = useState([]);
   const [removedValues, setRemovedValues] = useState([]); // Stack of removed values for undo
-
-  // Redirect if not authenticated
+  
+  // Use authenticated user ID or guest ID
+  const [userId, setUserId] = useState(null);
+  
   useEffect(() => {
-    if (!isLoading && !isAuthenticated) {
-      router.push('/');
+    if (!isLoading) {
+      const id = getCurrentUserId(authUserId);
+      setUserId(id);
     }
-  }, [isLoading, isAuthenticated, router]);
+  }, [authUserId, isLoading]);
 
   // Pobierz wartości z fazy SELECT
   useEffect(() => {
@@ -26,7 +30,8 @@ export default function ValuesReducePage() {
     
     async function fetchSelectedValues() {
       try {
-        const res = await apiGet(`/values/select/${userId}`);
+        const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+        const res = await fetch(`${API_URL}/values/select/${userId}`);
         const data = await res.json();
 
         // 🔑 poprawna ścieżka
@@ -69,9 +74,14 @@ export default function ValuesReducePage() {
     if (!userId) return; // No user ID available
     
     try {
-      const res = await apiPost(`/values/reduce`, {
-        user_id: userId,
-        reduced_values: selectedValues,
+      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+      const res = await fetch(`${API_URL}/values/reduce`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          user_id: userId,
+          reduced_values: selectedValues,
+        }),
       });
 
       const data = await res.json();

@@ -4,11 +4,12 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "hooks/useAuth";
 import { useApi } from "hooks/useApi";
+import { getCurrentUserId } from "lib/guestUser";
 
 export default function FeedbackPage() {
   const router = useRouter();
   const { user, isAuthenticated, isLoading } = useAuth();
-  const { userId, apiPost } = useApi();
+  const { userId: authUserId, apiPost } = useApi();
   const [rating, setRating] = useState(4);
   const [likedInput, setLikedInput] = useState("");
   const [dislikedInput, setDislikedInput] = useState("");
@@ -18,13 +19,16 @@ export default function FeedbackPage() {
 
   const likedChips = ["AI tone of voice", "Design", "Tournament game"];
   const dislikedChips = ["AI tone of voice", "Design", "Tournament game"];
-
-  // Redirect if not authenticated
+  
+  // Use authenticated user ID or guest ID
+  const [userId, setUserId] = useState(null);
+  
   useEffect(() => {
-    if (!isLoading && !isAuthenticated) {
-      router.push('/');
+    if (!isLoading) {
+      const id = getCurrentUserId(authUserId);
+      setUserId(id);
     }
-  }, [isLoading, isAuthenticated, router]);
+  }, [authUserId, isLoading]);
 
   // Show loading while authenticating
   if (isLoading || !userId) {
@@ -252,10 +256,12 @@ export default function FeedbackPage() {
         <div className="w-full pt-8 pb-16">
           <div className="bg-gray-100 rounded-3xl p-6 shadow-lg text-center space-y-4">
             <h3 className="text-xl font-bold text-gray-900">
-              Loved the app?
+              Did you get value from the app?
             </h3>
             <p className="text-gray-700 text-sm leading-relaxed">
-              Thanks for being here. If you'd like to support our mission, buy us a coffee and help us keep building this space for reflection.
+            If this space helps you pause, breathe, and reconnect with yourself — to live with more awareness and gentleness — consider supporting us with a coffee.
+Your kindness helps us nurture and grow this work, so it can keep guiding others toward a more conscious, meaningful life.
+Every coffee is a quiet “thank you” that keeps this light shining.
             </p>
             <button
               onClick={() => {

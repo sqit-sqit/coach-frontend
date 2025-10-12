@@ -9,23 +9,27 @@ import ValuesLayout from "components/layouts/ValuesLayout";
 import { useAuth } from "hooks/useAuth";
 import { useApi } from "hooks/useApi";
 import jsPDF from "jspdf";
+import { getCurrentUserId } from "lib/guestUser";
 
 export default function ValuesChatPage() {
   const router = useRouter();
   const { user, isAuthenticated, isLoading } = useAuth();
-  const { userId, apiPostStream, apiPost, apiGet } = useApi();
+  const { userId: authUserId, apiPostStream, apiPost, apiGet } = useApi();
   const [messages, setMessages] = useState([]);
   const [chosenValue, setChosenValue] = useState(null);
   const [isStreaming, setIsStreaming] = useState(false);
   const [chatMode, setChatMode] = useState("chat"); // "chat" or "reflect"
   const [sessionSummary, setSessionSummary] = useState(null); // Store summary for PDF download
-
-  // Redirect if not authenticated
+  
+  // Use authenticated user ID or guest ID
+  const [userId, setUserId] = useState(null);
+  
   useEffect(() => {
-    if (!isLoading && !isAuthenticated) {
-      router.push('/');
+    if (!isLoading) {
+      const id = getCurrentUserId(authUserId);
+      setUserId(id);
     }
-  }, [isLoading, isAuthenticated, router]);
+  }, [authUserId, isLoading]);
 
   const messagesEndRef = useRef(null);
   const abortControllerRef = useRef(null);
@@ -84,16 +88,34 @@ export default function ValuesChatPage() {
     );
   }
 
+  // 🔹 Wykryj czy jesteśmy w sekcji Welcome czy już w dalszych sekcjach
+  // Welcome = tylko 1 wiadomość AI (powitanie), user jeszcze nie odpowiedział LUB dopiero odpowiedział
+  // Po Welcome = user odpowiedział + AI przeszło do sekcji 2 (Meaning) = messages.length >= 4
+  const isInWelcomeSection = chatMode === "chat" && messages.length < 4;
+  
   const quickTips = [
+    // 🔹 HIDDEN for V1 - will be useful in future versions
+    // {
+    //   label: "Quick tips",
+    //   onClick: () => handleSendMessage("Can you give me some quick tips about working with this value?"),
+    // },
     {
-      label: "Quick tips",
-      onClick: () => handleSendMessage("Can you give me some quick tips about working with this value?"),
-    },
-    {
-      label: chatMode === "chat" ? "Go to the next step" : "Jump to summary",
+      label: "Proceed",
       onClick: () => {
-        console.log("Button clicked, chatMode:", chatMode);
-        chatMode === "chat" ? handleJumpToSummary() : handleGenerateSummary();
+        console.log("Proceed clicked, chatMode:", chatMode, "isInWelcome:", isInWelcomeSection);
+        // W sekcji Welcome → Skip to reflection
+        // Po sekcji Welcome (w chat) → Go to reflection (reflect mode)
+        // W reflect mode → Generate summary
+        if (isInWelcomeSection) {
+          // Skip całego chat, idź do refleksji
+          handleGenerateSummary();
+        } else if (chatMode === "chat") {
+          // Przejdź z chat do reflect
+          handleJumpToSummary();
+        } else {
+          // W reflect → generuj summary
+          handleGenerateSummary();
+        }
       },
     },
   ];
@@ -101,6 +123,11 @@ export default function ValuesChatPage() {
   // 🔹 Obsługa przejścia do summary
   const handleJumpToSummary = async () => {
     console.log("handleJumpToSummary called, switching to reflect mode");
+    
+    // Dodaj wiadomość użytkownika "Go to the next step"
+    const userMessage = { role: "user", content: "Go to the next step" };
+    setMessages(prev => [...prev, userMessage]);
+    
     // Przełącz tryb na "reflect"
     setChatMode("reflect");
     

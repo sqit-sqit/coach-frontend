@@ -7,6 +7,8 @@ import Heading from "components/ui/Heading";
 import BackButton from "components/ui/BackButton";
 import ExpandableInfo from "components/ui/ExpandableInfo";
 import { Search, MessageSquare, Pause, Mail } from "lucide-react";
+import { useAuth } from "hooks/useAuth";
+import { getCurrentUserId } from "lib/guestUser";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "";
 
@@ -16,8 +18,17 @@ export const dynamic = "force-dynamic";
 function InitContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
+  const { userId: authUserId, isAuthenticated, isLoading } = useAuth();
 
-  const userId = "demo-user-123"; // tymczasowe ID użytkownika
+  // Use authenticated user ID or create/get guest ID
+  const [userId, setUserId] = useState(null);
+  
+  useEffect(() => {
+    if (!isLoading) {
+      const id = getCurrentUserId(authUserId);
+      setUserId(id);
+    }
+  }, [authUserId, isLoading]);
   const initialStep = parseInt(searchParams.get("step") || "1", 10);
   const [step, setStep] = useState(initialStep);
 
@@ -39,6 +50,8 @@ function InitContent() {
   // 🔹 Ładowanie danych użytkownika przy powrocie na Step 4
   useEffect(() => {
     async function fetchInitData() {
+      if (!userId) return; // Wait for userId to be set
+      
       try {
         const res = await fetch(`${API_URL}/values/init/progress/${userId}`);
         if (!res.ok) return;
@@ -53,13 +66,19 @@ function InitContent() {
       }
     }
 
-    if (step === 4) {
+    if (step === 4 && userId) {
       fetchInitData();
     }
-  }, [step]);
+  }, [step, userId]);
 
   // 🔹 Zapis progresu
   const saveProgress = async (nextStep) => {
+    if (!userId) {
+      console.warn("Cannot save progress: userId not yet initialized");
+      setStep(nextStep); // Still allow moving forward
+      return;
+    }
+    
     try {
       const res = await fetch(`${API_URL}/values/init/progress`, {
         method: "POST",

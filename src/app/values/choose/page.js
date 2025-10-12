@@ -5,28 +5,33 @@ import { useRouter } from "next/navigation";
 import Button from "components/ui/Button";
 import { useAuth } from "hooks/useAuth";
 import { useApi } from "hooks/useApi";
+import { getCurrentUserId } from "lib/guestUser";
 
 export default function ValuesChoosePage() {
   const router = useRouter();
   const { user, isAuthenticated, isLoading } = useAuth();
-  const { userId, apiGet, apiPost } = useApi();
+  const { userId: authUserId } = useApi();
   const [reducedValues, setReducedValues] = useState([]);
   const [chosenValue, setChosenValue] = useState(null);
-
-  // Redirect if not authenticated
+  
+  // Use authenticated user ID or guest ID
+  const [userId, setUserId] = useState(null);
+  
   useEffect(() => {
-    if (!isLoading && !isAuthenticated) {
-      router.push('/');
+    if (!isLoading) {
+      const id = getCurrentUserId(authUserId);
+      setUserId(id);
     }
-  }, [isLoading, isAuthenticated, router]);
+  }, [authUserId, isLoading]);
 
   // 🔹 Pobierz wartości z fazy REDUCE
   useEffect(() => {
     if (!userId) return; // Wait for user ID
-    
+
     async function fetchReducedValues() {
       try {
-        const res = await apiGet(`/values/reduce/${userId}`);
+        const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+        const res = await fetch(`${API_URL}/values/reduce/${userId}`);
         const data = await res.json();
 
         const reduced = data?.reduced_values || [];
@@ -41,10 +46,11 @@ export default function ValuesChoosePage() {
   // 🔹 Pobierz wcześniej wybraną wartość, żeby ją podświetlić
   useEffect(() => {
     if (!userId) return; // Wait for user ID
-    
+
     async function fetchChosenValue() {
       try {
-        const res = await apiGet(`/values/choose/${userId}`);
+        const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+        const res = await fetch(`${API_URL}/values/choose/${userId}`);
         const data = await res.json();
         if (data?.chosen_value) {
           setChosenValue(data.chosen_value);
@@ -72,9 +78,14 @@ export default function ValuesChoosePage() {
     if (!userId) return; // No user ID available
     
     try {
-      const res = await apiPost(`/values/choose`, {
-        user_id: userId,
-        chosen_value: chosenValue,
+      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+      const res = await fetch(`${API_URL}/values/choose`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          user_id: userId,
+          chosen_value: chosenValue,
+        }),
       });
 
       const data = await res.json();

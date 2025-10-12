@@ -6,20 +6,24 @@ import Button from "components/ui/Button";
 import BackButton from "components/ui/BackButton";
 import { useAuth } from "hooks/useAuth";
 import { useApi } from "hooks/useApi";
+import { getCurrentUserId } from "lib/guestUser";
 
 export default function ValuesSelectPage() {
   const router = useRouter();
   const { user, isAuthenticated, isLoading } = useAuth();
-  const { userId, apiGet, apiPost } = useApi();
+  const { userId: authUserId } = useApi();
   const [allValues, setAllValues] = useState([]);
   const [selectedValues, setSelectedValues] = useState([]);
-
-  // Redirect if not authenticated
+  
+  // Use authenticated user ID or guest ID
+  const [userId, setUserId] = useState(null);
+  
   useEffect(() => {
-    if (!isLoading && !isAuthenticated) {
-      router.push('/');
+    if (!isLoading) {
+      const id = getCurrentUserId(authUserId);
+      setUserId(id);
     }
-  }, [isLoading, isAuthenticated, router]);
+  }, [authUserId, isLoading]);
 
   // Fetch values when userId is available
   useEffect(() => {
@@ -27,8 +31,10 @@ export default function ValuesSelectPage() {
     
     async function fetchValues() {
       try {
+        const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+        
         // 🔹 Najpierw pobierz zapisany progres (czy coś już jest w select)
-        const progressRes = await apiGet(`/values/init/progress/${userId}`);
+        const progressRes = await fetch(`${API_URL}/values/init/progress/${userId}`);
         if (progressRes.ok) {
           const progressData = await progressRes.json();
           const alreadySelected = progressData?.select?.data?.selected_values || [];
@@ -36,7 +42,7 @@ export default function ValuesSelectPage() {
         }
 
         // 🔹 Potem pobierz listę wszystkich wartości (30 losowych)
-        const res = await apiGet(`/values/list`);
+        const res = await fetch(`${API_URL}/values/list`);
         const data = await res.json();
 
         const shuffled = data.sort(() => 0.5 - Math.random());
@@ -80,9 +86,14 @@ export default function ValuesSelectPage() {
     if (!userId) return; // No user ID available
     
     try {
-      const res = await apiPost(`/values/select`, {
-        user_id: userId,
-        selected_values: selectedValues,
+      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+      const res = await fetch(`${API_URL}/values/select`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          user_id: userId,
+          selected_values: selectedValues,
+        }),
       });
 
       const data = await res.json();
