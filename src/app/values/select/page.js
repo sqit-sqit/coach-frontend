@@ -185,8 +185,8 @@ export default function ValuesSelectPage() {
         <button
           onClick={async () => {
             try {
-              // const res = await fetch("http://localhost:8000/values/list");
-              const res = await apiGet(`/values/list`);
+              const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+              const res = await fetch(`${API_URL}/values/list`);
               if (!res.ok) throw new Error("Failed to fetch values");
               const data = await res.json();
 
@@ -200,7 +200,7 @@ export default function ValuesSelectPage() {
           }}
           className="text-gray-500 hover:underline"
         >
-          Refresh
+          Refresh ↻
         </button>
 
         {/* Next button */}
