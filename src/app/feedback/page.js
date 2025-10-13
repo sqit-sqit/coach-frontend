@@ -114,13 +114,13 @@ export default function FeedbackPage() {
 
   return (
     <div className="min-h-screen bg-white flex items-center justify-center p-4 pb-48">
-      <div className="w-[902px] h-[700px] bg-[rgba(70,92,251,0.8)] rounded-[32px] flex flex-col items-start p-[30px_42px] gap-8">
+      <div className="max-w-4xl w-full min-h-[600px] mx-auto bg-[rgba(70,92,251,0.8)] rounded-[32px] flex flex-col items-start p-6 sm:p-8 lg:p-10 gap-6 sm:gap-8">
         {/* Header */}
         <div className="w-full space-y-3">
-          <h1 className="text-2xl font-bold text-white text-center">
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-white text-center">
             Leave us feedback
           </h1>
-          <p className="text-white text-sm leading-relaxed text-center">
+          <p className="text-white text-sm sm:text-base leading-relaxed text-center">
             Thank you for taking time to do our value workshop. Could you please rate your experience and write us a quick feedback
           </p>
           
@@ -148,7 +148,7 @@ export default function FeedbackPage() {
 
         {/* What did you like section */}
         <div className="w-full space-y-2">
-          <h2 className="text-lg font-semibold text-white">
+          <h2 className="text-base sm:text-lg font-semibold text-white">
             What did you like from the app?
           </h2>
           <div className="flex flex-wrap gap-2 border border-white/20 rounded-2xl p-2 bg-white">
@@ -189,7 +189,7 @@ export default function FeedbackPage() {
 
         {/* What did you NOT like section */}
         <div className="w-full space-y-2">
-          <h2 className="text-lg font-semibold text-white">
+          <h2 className="text-base sm:text-lg font-semibold text-white">
             What did you NOT like?
           </h2>
           <div className="flex flex-wrap gap-2 border border-white/20 rounded-2xl p-2 bg-white">
@@ -230,7 +230,7 @@ export default function FeedbackPage() {
 
         {/* Tell us more section */}
         <div className="w-full space-y-2">
-          <h2 className="text-lg font-semibold text-white">
+          <h2 className="text-base sm:text-lg font-semibold text-white">
             Tell us more
           </h2>
           <textarea
@@ -255,10 +255,10 @@ export default function FeedbackPage() {
         {/* Buy me a coffee section */}
         <div className="w-full pt-8 pb-16">
           <div className="bg-gray-100 rounded-3xl p-6 shadow-lg text-center space-y-4">
-            <h3 className="text-xl font-bold text-gray-900">
+            <h3 className="text-lg sm:text-xl font-bold text-gray-900">
               Did you get value from the app?
             </h3>
-            <p className="text-gray-700 text-sm leading-relaxed">
+            <p className="text-gray-700 text-sm sm:text-base leading-relaxed">
             If this space helps you pause, breathe, and reconnect with yourself — to live with more awareness and gentleness — consider supporting us with a coffee.
 Your kindness helps us nurture and grow this work, so it can keep guiding others toward a more conscious, meaningful life.
 Every coffee is a quiet “thank you” that keeps this light shining.
