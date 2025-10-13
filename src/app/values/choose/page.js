@@ -62,6 +62,14 @@ export default function ValuesChoosePage() {
     fetchChosenValue();
   }, [userId]);
 
+  // 🔹 Validate chosen value - clear it if not in current reduced values
+  useEffect(() => {
+    if (chosenValue && reducedValues.length > 0 && !reducedValues.includes(chosenValue)) {
+      console.log(`Chosen value "${chosenValue}" is not in current reduced values, clearing...`);
+      setChosenValue(null);
+    }
+  }, [chosenValue, reducedValues]);
+
   // Show loading while authenticating - AFTER all hooks
   if (isLoading || !userId) {
     return (

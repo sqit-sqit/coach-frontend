@@ -594,15 +594,7 @@ export default function ValuesChatPage() {
     <div className="min-h-screen flex flex-col bg-[#F9F9FB]">
       {/* Chat messages area */}
       <div className="flex-1 overflow-y-auto">
-        <div className="space-y-6 px-4 sm:px-6 lg:px-8">
-          {/* Back button */}
-          <button
-            onClick={() => router.push("/values/choose")}
-            className="flex items-center text-gray-600 mb-6"
-          >
-            ← Back
-          </button>
-
+        <div className="space-y-6 px-4 sm:px-6 lg:px-8 pt-16">
           {/* Wiadomości */}
           <div className="space-y-6">
             {messages.map((message, index) => (
