@@ -95,16 +95,7 @@ export default function ValuesReducePage() {
   };
 
   return (
-    <div className="max-w-3xl mx-auto p-6 text-center relative space-y-12">
-      {/* Back button */}
-      <div className="absolute top-4 left-4">
-        <button
-          onClick={() => router.push("/values/select")}
-          className="text-gray-600 hover:underline"
-        >
-          ← Back
-        </button>
-      </div>
+    <div className="text-center relative space-y-12">
 
       <h1 className="text-3xl font-bold text-gray-900 mt-12">
         Now remove some values so you have 10 values left

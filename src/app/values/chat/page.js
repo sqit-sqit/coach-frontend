@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import ChatBubble from "components/ui/ChatBubble";
 import ChatInput from "components/ui/ChatInput";
 import QuickChip from "components/ui/QuickChip";
-import ValuesLayout from "components/layouts/ValuesLayout";
 import { useAuth } from "hooks/useAuth";
 import { useApi } from "hooks/useApi";
 import jsPDF from "jspdf";
@@ -77,14 +76,12 @@ export default function ValuesChatPage() {
   // Show loading while authenticating - AFTER all hooks
   if (isLoading || !userId) {
     return (
-      <ValuesLayout>
-        <div className="flex items-center justify-center min-h-screen">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-            <p className="text-gray-600">Loading...</p>
-          </div>
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading...</p>
         </div>
-      </ValuesLayout>
+      </div>
     );
   }
 
@@ -597,7 +594,7 @@ export default function ValuesChatPage() {
     <div className="min-h-screen flex flex-col bg-[#F9F9FB]">
       {/* Chat messages area */}
       <div className="flex-1 overflow-y-auto">
-        <ValuesLayout className="space-y-6 px-4 sm:px-6 lg:px-8">
+        <div className="space-y-6 px-4 sm:px-6 lg:px-8">
           {/* Back button */}
           <button
             onClick={() => router.push("/values/choose")}
@@ -632,19 +629,19 @@ export default function ValuesChatPage() {
             )}
             <div ref={messagesEndRef} />
           </div>
-        </ValuesLayout>
+        </div>
       </div>
 
       {/* Input area – sticky na dole */}
       <div className="bg-transparent sticky bottom-0">
-        <ValuesLayout className="space-y-4 px-4 sm:px-6 lg:px-8">
+        <div className="space-y-4 px-4 sm:px-6 lg:px-8">
           <div className="flex gap-2 justify-end">
             {quickTips.map((tip, index) => (
               <QuickChip key={index} label={tip.label} onClick={tip.onClick} />
             ))}
           </div>
           <ChatInput onSend={handleSendMessage} disabled={isStreaming} />
-        </ValuesLayout>
+        </div>
       </div>
     </div>
   );

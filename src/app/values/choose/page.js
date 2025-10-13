@@ -99,16 +99,7 @@ export default function ValuesChoosePage() {
   };
 
   return (
-    <div className="max-w-3xl mx-auto p-6 text-center relative space-y-12">
-      {/* Back button */}
-      <div className="absolute top-4 left-4">
-        <button
-          onClick={() => router.push("/values/reduce")}
-          className="text-gray-600 hover:underline"
-        >
-          ← Back
-        </button>
-      </div>
+    <div className="text-center relative space-y-12">
 
       {/* Lista 10 wartości */}
       <h2 className="text-xl font-bold text-gray-900 mt-12">
@@ -135,7 +126,7 @@ export default function ValuesChoosePage() {
         <h2 className="text-xl font-bold text-gray-900">
           Now you should choose your one most important value
         </h2>
-        <p className="text-gray-600 max-w-2xl mx-auto">
+        <p className="text-gray-600 max-w-3xl mx-auto">
           Now from the above set of values choose one, the most important value
           in your life at the moment. Select one and click "Continue" to
           proceed. If there is a challenge to decide which one is the most

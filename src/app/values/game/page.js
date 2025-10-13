@@ -197,20 +197,12 @@ export default function ValuesGamePage() {
           />
         </div>
 
-        <div className="p-4">
-          <button
-            onClick={() => router.back()}
-            className="flex items-center text-gray-600"
-          >
-            ← Back
-          </button>
-        </div>
 
         <div className="flex-1 flex flex-col">
-          <div className="max-w-5xl mx-auto w-full px-4 text-center">
+          <div className="w-full text-center">
             <h1 className="text-2xl font-bold mb-8">Your value is:</h1>
 
-            <div className="max-w-xl mx-auto w-full flex flex-col items-center gap-8">
+            <div className="max-w-2xl mx-auto w-full flex flex-col items-center gap-8">
               <motion.div
                 variants={cardVariants}
                 initial="hidden"
@@ -296,18 +288,10 @@ export default function ValuesGamePage() {
       </div>
 
       {/* Back */}
-      <div className="p-4">
-        <button
-          onClick={() => router.back()}
-          className="flex items-center text-gray-600"
-        >
-          ← Back
-        </button>
-      </div>
 
       {/* Game */}
       <div className="flex-1 flex flex-col">
-        <div className="max-w-5xl mx-auto w-full px-4 text-center space-y-10 mt-10">
+        <div className="w-full text-center space-y-10 mt-10">
           <h2 className="text-2xl font-bold mb-2">
             Pick one which is the more important for you.
           </h2>

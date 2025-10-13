@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "hooks/useAuth";
 import { useApi } from "hooks/useApi";
 import { getCurrentUserId } from "lib/guestUser";
+import WorkshopLayout from "../../components/layouts/WorkshopLayout";
 
 export default function FeedbackPage() {
   const router = useRouter();
@@ -113,8 +114,8 @@ export default function FeedbackPage() {
   };
 
   return (
-    <div className="min-h-screen bg-white flex items-center justify-center p-4 pb-48">
-      <div className="max-w-4xl w-full min-h-[600px] mx-auto bg-[rgba(70,92,251,0.8)] rounded-[32px] flex flex-col items-start p-6 sm:p-8 lg:p-10 gap-6 sm:gap-8">
+    <WorkshopLayout width="wide" className="flex items-center justify-center p-4 pb-48">
+      <div className="w-full min-h-[600px] bg-[rgba(70,92,251,0.8)] rounded-[32px] flex flex-col items-start p-6 sm:p-8 lg:p-10 gap-6 sm:gap-8">
         {/* Header */}
         <div className="w-full space-y-3">
           <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-white text-center">
@@ -276,6 +277,6 @@ Every coffee is a quiet “thank you” that keeps this light shining.
           </div>
         </div>
       </div>
-    </div>
+    </WorkshopLayout>
   );
 }

@@ -4,7 +4,6 @@ import { useState, useEffect, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import Button from "components/ui/Button";
 import Heading from "components/ui/Heading";
-import BackButton from "components/ui/BackButton";
 import ExpandableInfo from "components/ui/ExpandableInfo";
 import AuthChoiceModal from "components/AuthChoiceModal";
 import { Search, MessageSquare, Pause, Mail } from "lucide-react";
@@ -139,22 +138,14 @@ function InitContent() {
         />
       )}
       
-      <div className="max-w-3xl mx-auto p-6 text-center relative">
-        {/* Back button */}
-        <div className="absolute top-4 left-4">
-        {step > 1 ? (
-          <BackButton onClick={() => saveProgress(step - 1)} />
-        ) : (
-          <BackButton onClick={() => router.push("/dashboard")} />
-        )}
-      </div>
+      <div className="text-center relative">
 
       {/* --- Step 1 --- */}
       {step === 1 && (
         <div className="space-y-6 mt-10">
           <Heading level={1}>Welcome to Your Values Journey</Heading>
           <p className="text-lg text-gray-700">Explore your values.</p>
-          <p className="text-gray-600 max-w-2xl mx-auto">
+          <p className="text-gray-600 max-w-3xl mx-auto">
           Through short, guided conversations, you’ll uncover what’s important to you, 
           reflect on why, and see how it shows up in your daily life. Think of it as a friendly guide
            not a test.
@@ -195,7 +186,7 @@ function InitContent() {
       {step === 2 && (
         <div className="text-center mt-10">
           <Heading level={1} className="mb-2">How it works</Heading>
-          <p className="text-gray-700 max-w-2xl mx-auto mb-10">
+          <p className="text-gray-700 max-w-3xl mx-auto mb-10">
             You’ll have a guided chat with AI. It will ask you thoughtful
             questions, you answer in your own words, and together you’ll uncover
             patterns and meaning. At the end, you’ll get a summary designed only
@@ -289,7 +280,7 @@ function InitContent() {
           <Heading level={1} className="font-bold underline mb-6">
             Your reflections are yours
           </Heading>
-          <p className="text-gray-700 max-w-2xl mx-auto mb-10">
+          <p className="text-gray-700 max-w-3xl mx-auto mb-10">
             Everything you write here is{" "}
             <span className="font-semibold">private and confidential</span>. Your
             answers are never sold, shared, or used for advertising. You control
@@ -324,7 +315,7 @@ function InitContent() {
 
       {/* --- Step 4 --- */}
       {step === 4 && (
-        <div className="max-w-2xl mx-auto text-left space-y-8 mt-20">
+        <div className="max-w-3xl mx-auto text-left space-y-8 mt-20">
           <Heading level={1}>Tell us a little about yourself</Heading>
           <p className="text-gray-600">
             Before you start, we’d like to know a bit about you. This way, we can adjust the session more to your profile. Don’t worry, you can skip anything you don’t

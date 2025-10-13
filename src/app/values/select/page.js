@@ -3,7 +3,6 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Button from "components/ui/Button";
-import BackButton from "components/ui/BackButton";
 import { useAuth } from "hooks/useAuth";
 import { useApi } from "hooks/useApi";
 import { getCurrentUserId } from "lib/guestUser";
@@ -107,12 +106,8 @@ export default function ValuesSelectPage() {
 
 
   return (
-    <div className="max-w-3xl mx-auto p-6 text-center relative space-y-12">
+    <div className="text-center relative space-y-12">
 
-      {/* Back button */}
-      <div className="absolute top-4 left-4">
-        <BackButton onClick={() => router.push("/values/init?step=4")} />
-      </div>
 
 
       <h1 className="text-3xl font-bold text-gray-900 mt-12">
