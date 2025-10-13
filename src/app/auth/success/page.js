@@ -2,12 +2,14 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { useAuth } from '../../../hooks/useAuth'
 
 // Wyłącz prerendering dla tej strony
 export const dynamic = 'force-dynamic'
 
 export default function AuthSuccess() {
   const router = useRouter()
+  const { login } = useAuth()
   const [token, setToken] = useState(null)
 
   useEffect(() => {
@@ -17,8 +19,8 @@ export default function AuthSuccess() {
     setToken(tokenFromUrl)
 
     if (tokenFromUrl) {
-      // Zapisz token w localStorage
-      localStorage.setItem('auth_token', tokenFromUrl)
+      // Użyj login z useAuth hook (zaktualizuje stan w całej aplikacji)
+      login(tokenFromUrl)
       
       // Przekieruj do dashboard
       router.push('/dashboard')

@@ -99,7 +99,8 @@ export default function ValuesChatPage() {
     //   label: "Quick tips",
     //   onClick: () => handleSendMessage("Can you give me some quick tips about working with this value?"),
     // },
-    {
+    // Hide "Proceed" button if summary has been generated
+    ...(sessionSummary ? [] : [{
       label: "Proceed",
       onClick: () => {
         console.log("Proceed clicked, chatMode:", chatMode, "isInWelcome:", isInWelcomeSection);
@@ -117,7 +118,7 @@ export default function ValuesChatPage() {
           handleGenerateSummary();
         }
       },
-    },
+    }]),
   ];
 
   // 🔹 Obsługa przejścia do summary

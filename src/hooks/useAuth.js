@@ -15,6 +15,39 @@ export function useAuth() {
     } else {
       setIsLoading(false)
     }
+
+    // Nasłuchuj na zmiany w localStorage (dla sync między kartami i w tej samej karcie)
+    const handleStorageChange = (e) => {
+      if (e.key === 'auth_token') {
+        if (e.newValue) {
+          setToken(e.newValue)
+          fetchUserData(e.newValue)
+        } else {
+          setUser(null)
+          setToken(null)
+          setIsLoading(false)
+        }
+      }
+    }
+
+    // Custom event dla tej samej karty
+    const handleAuthChange = (e) => {
+      if (e.detail.type === 'login') {
+        setToken(e.detail.token)
+        fetchUserData(e.detail.token)
+      } else if (e.detail.type === 'logout') {
+        setUser(null)
+        setToken(null)
+        setIsLoading(false)
+      }
+    }
+
+    window.addEventListener('storage', handleStorageChange)
+    window.addEventListener('authChange', handleAuthChange)
+    return () => {
+      window.removeEventListener('storage', handleStorageChange)
+      window.removeEventListener('authChange', handleAuthChange)
+    }
   }, [])
 
   const fetchUserData = async (token) => {
@@ -41,12 +74,25 @@ export function useAuth() {
     setToken(newToken)
     localStorage.setItem('auth_token', newToken)
     fetchUserData(newToken)
+    
+    // Wyślij custom event dla tej samej karty
+    window.dispatchEvent(new CustomEvent('authChange', {
+      detail: { type: 'login', token: newToken }
+    }))
   }
 
   const logout = () => {
     setUser(null)
     setToken(null)
     localStorage.removeItem('auth_token')
+    
+    // Wyślij custom event dla tej samej karty
+    window.dispatchEvent(new CustomEvent('authChange', {
+      detail: { type: 'logout' }
+    }))
+    
+    // Hard redirect do landing page
+    window.location.href = '/'
   }
 
   const isAuthenticated = !!user && !!token
