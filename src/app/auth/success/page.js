@@ -11,16 +11,9 @@ export default function AuthSuccess() {
   const [token, setToken] = useState(null)
 
   useEffect(() => {
-    // Pobierz token z URL po stronie klienta (query lub hash)
-    const searchParams = new URLSearchParams(window.location.search)
-    let tokenFromUrl = searchParams.get('token') || searchParams.get('access_token')
-
-    if (!tokenFromUrl && typeof window !== 'undefined' && window.location.hash) {
-      const hash = window.location.hash.startsWith('#') ? window.location.hash.slice(1) : window.location.hash
-      const hashParams = new URLSearchParams(hash)
-      tokenFromUrl = hashParams.get('token') || hashParams.get('access_token')
-    }
-
+    // Pobierz token z URL po stronie klienta
+    const urlParams = new URLSearchParams(window.location.search)
+    const tokenFromUrl = urlParams.get('token')
     setToken(tokenFromUrl)
 
     if (tokenFromUrl) {
