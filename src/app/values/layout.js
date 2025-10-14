@@ -35,15 +35,6 @@ function ValuesLayoutContent({ children }) {
     }
   };
   
-  // Debug logs
-  console.log('ValuesLayout Debug:', {
-    pathname,
-    step,
-    isInitPage,
-    isInitStep1,
-    showBackButton
-  });
-  
   return (
     <WorkshopLayout 
       background="gray" 

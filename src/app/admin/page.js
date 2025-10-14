@@ -14,6 +14,10 @@ export default function AdminPanel() {
   const [selectedConversation, setSelectedConversation] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  
+  // AI Models state
+  const [aiModels, setAiModels] = useState({ configs: {}, available_models: [] });
+  const [editingModel, setEditingModel] = useState(null);
 
   // Sprawdź czy admin key jest w localStorage
   useEffect(() => {
@@ -51,6 +55,14 @@ export default function AdminPanel() {
       const convData = await convRes.json();
       
       setConversations(convData.conversations || []);
+      
+      // Pobierz konfigurację AI models
+      const aiModelsRes = await fetch(`${API_URL}/admin/ai-models?admin_key=${key}`);
+      if (aiModelsRes.ok) {
+        const aiModelsData = await aiModelsRes.json();
+        setAiModels(aiModelsData);
+      }
+      
       setIsAuthenticated(true);
       localStorage.setItem('admin_key', key);
       
@@ -92,6 +104,38 @@ export default function AdminPanel() {
     a.href = url;
     a.download = `conversations-${new Date().toISOString().split('T')[0]}.csv`;
     a.click();
+  };
+
+  const updateAIModel = async (appName, config) => {
+    try {
+      const res = await fetch(`${API_URL}/admin/ai-models/${appName}?admin_key=${adminKey}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(config)
+      });
+      
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.detail || 'Failed to update AI model');
+      }
+      
+      const data = await res.json();
+      alert(`✅ AI model updated for ${appName}!`);
+      
+      // Refresh AI models data
+      const aiModelsRes = await fetch(`${API_URL}/admin/ai-models?admin_key=${adminKey}`);
+      if (aiModelsRes.ok) {
+        const aiModelsData = await aiModelsRes.json();
+        setAiModels(aiModelsData);
+      }
+      
+      setEditingModel(null);
+    } catch (err) {
+      console.error('Error updating AI model:', err);
+      alert(`❌ Failed to update AI model: ${err.message}`);
+    }
   };
 
   // Login screen
@@ -191,6 +235,112 @@ export default function AdminPanel() {
             </div>
           </div>
         )}
+
+        {/* AI Model Configuration */}
+        <div className="bg-white rounded-lg shadow-md p-6 mb-8">
+          <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
+            <span>🤖</span> AI Model Configuration
+          </h2>
+          
+          <div className="space-y-4">
+            {Object.entries(aiModels.configs || {}).map(([appName, config]) => (
+              <div key={appName} className="border rounded-lg p-4 bg-gray-50">
+                <div className="flex justify-between items-start mb-3">
+                  <div>
+                    <h3 className="font-bold text-lg capitalize">{appName}</h3>
+                    <p className="text-sm text-gray-600">{config.description}</p>
+                  </div>
+                  {editingModel?.app === appName ? (
+                    <button
+                      onClick={() => setEditingModel(null)}
+                      className="text-sm text-gray-600 hover:text-gray-800"
+                    >
+                      Cancel
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => setEditingModel({ app: appName, ...config })}
+                      className="text-sm bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700"
+                    >
+                      Edit
+                    </button>
+                  )}
+                </div>
+                
+                {editingModel?.app === appName ? (
+                  <div className="space-y-3 mt-3 border-t pt-3">
+                    <div>
+                      <label className="block text-sm font-medium mb-1">AI Model</label>
+                      <select
+                        value={editingModel.model}
+                        onChange={(e) => setEditingModel({...editingModel, model: e.target.value})}
+                        className="w-full px-3 py-2 border rounded bg-white"
+                      >
+                        {aiModels.available_models?.map(model => (
+                          <option key={model} value={model}>{model}</option>
+                        ))}
+                      </select>
+                      <p className="text-xs text-gray-500 mt-1">
+                        💡 Recommended: gpt-4o-mini (best quality/price ratio)
+                      </p>
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium mb-1">
+                        Temperature: {editingModel.temperature?.toFixed(1)}
+                      </label>
+                      <input
+                        type="range"
+                        min="0"
+                        max="1"
+                        step="0.1"
+                        value={editingModel.temperature}
+                        onChange={(e) => setEditingModel({...editingModel, temperature: parseFloat(e.target.value)})}
+                        className="w-full"
+                      />
+                      <div className="flex justify-between text-xs text-gray-500">
+                        <span>More focused (0)</span>
+                        <span>More creative (1)</span>
+                      </div>
+                    </div>
+                    
+                    <button
+                      onClick={() => updateAIModel(appName, {
+                        model: editingModel.model,
+                        temperature: editingModel.temperature,
+                        max_tokens: editingModel.max_tokens
+                      })}
+                      className="w-full bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 font-medium"
+                    >
+                      💾 Save Changes
+                    </button>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div>
+                      <span className="text-gray-600">Model:</span>
+                      <span className="ml-2 font-mono font-medium">{config.model}</span>
+                    </div>
+                    <div>
+                      <span className="text-gray-600">Temperature:</span>
+                      <span className="ml-2 font-medium">{config.temperature}</span>
+                    </div>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+          
+          <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded text-sm">
+            <p className="font-medium mb-1">📖 Available Models:</p>
+            <ul className="text-xs space-y-1 text-gray-700">
+              <li><strong>gpt-4o-mini:</strong> Best balance (recommended) 💰</li>
+              <li><strong>gpt-4o:</strong> Highest quality, premium price 💎</li>
+              <li><strong>gpt-4-turbo:</strong> Previous gen, still powerful 🚀</li>
+              <li><strong>gpt-3.5-turbo:</strong> Budget friendly, fast ⚡</li>
+            </ul>
+          </div>
+        </div>
 
         {/* Export Button */}
         <div className="mb-4 flex justify-end">

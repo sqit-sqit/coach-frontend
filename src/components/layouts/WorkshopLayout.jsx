@@ -29,7 +29,6 @@ export default function WorkshopLayout({
             <BackButton {...backButtonProps} />
           </div>
         )}
-        {/* Debug: showBackButton = {showBackButton.toString()} */}
         {children}
       </div>
     </div>
