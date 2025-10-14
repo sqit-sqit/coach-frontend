@@ -28,16 +28,33 @@ export default function ValuesChoosePage() {
   useEffect(() => {
     if (!userId) return; // Wait for user ID
 
-    async function fetchReducedValues() {
+    async function fetchReducedValues(retryCount = 0) {
       try {
         const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+        console.log(`[CHOOSE] Fetching reduced values for user: ${userId} (attempt ${retryCount + 1})`);
+        
         const res = await fetch(`${API_URL}/values/reduce/${userId}`);
         const data = await res.json();
 
         const reduced = data?.reduced_values || [];
+        console.log(`[CHOOSE] Received ${reduced.length} values:`, reduced);
+        
+        // 🔄 Retry logic - jeśli brak danych i to pierwsza próba, spróbuj ponownie
+        if (reduced.length === 0 && retryCount < 3) {
+          console.log(`[CHOOSE] No values received, retrying in 500ms...`);
+          setTimeout(() => fetchReducedValues(retryCount + 1), 500);
+          return;
+        }
+        
         setReducedValues(reduced);
       } catch (err) {
-        console.error("Error fetching reduced values:", err);
+        console.error("[CHOOSE] Error fetching reduced values:", err);
+        
+        // Retry on error
+        if (retryCount < 3) {
+          console.log(`[CHOOSE] Error occurred, retrying in 500ms...`);
+          setTimeout(() => fetchReducedValues(retryCount + 1), 500);
+        }
       }
     }
     fetchReducedValues();
@@ -113,20 +130,26 @@ export default function ValuesChoosePage() {
       <h2 className="text-xl font-bold text-gray-900 mt-12">
         Here are your 10 most important values:
       </h2>
-      <div className="flex flex-wrap gap-2 justify-center">
-        {reducedValues.map((value, index) => (
-          <button
-            key={index}
-            onClick={() => setChosenValue(value)}
-            className={`px-4 py-2 rounded-full border border-[var(--Primary-7-main)] transition ${
-              chosenValue === value
-                ? "bg-[var(--Chip-Active)] text-gray-900"
-                : "bg-white text-gray-700"
-            }`}
-          >
-            {value}
-          </button>
-        ))}
+      <div className="flex flex-wrap gap-2 justify-center min-h-[100px]">
+        {reducedValues.length === 0 ? (
+          <div className="text-gray-500 italic py-8">
+            Loading your values...
+          </div>
+        ) : (
+          reducedValues.map((value, index) => (
+            <button
+              key={index}
+              onClick={() => setChosenValue(value)}
+              className={`px-4 py-2 rounded-full border border-[var(--Primary-7-main)] transition ${
+                chosenValue === value
+                  ? "bg-[var(--Chip-Active)] text-gray-900"
+                  : "bg-white text-gray-700"
+              }`}
+            >
+              {value}
+            </button>
+          ))
+        )}
       </div>
 
       {/* Sekcja wyboru */}

@@ -28,17 +28,34 @@ export default function ValuesReducePage() {
   useEffect(() => {
     if (!userId) return; // Wait for user ID
     
-    async function fetchSelectedValues() {
+    async function fetchSelectedValues(retryCount = 0) {
       try {
         const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+        console.log(`[REDUCE] Fetching selected values for user: ${userId} (attempt ${retryCount + 1})`);
+        
         const res = await fetch(`${API_URL}/values/select/${userId}`);
         const data = await res.json();
 
         // 🔑 poprawna ścieżka
         const selected = data?.selected_values || [];
+        console.log(`[REDUCE] Received ${selected.length} values:`, selected);
+        
+        // 🔄 Retry logic - jeśli brak danych i to pierwsza próba, spróbuj ponownie
+        if (selected.length === 0 && retryCount < 3) {
+          console.log(`[REDUCE] No values received, retrying in 500ms...`);
+          setTimeout(() => fetchSelectedValues(retryCount + 1), 500);
+          return;
+        }
+        
         setSelectedValues(selected);
       } catch (err) {
-        console.error("Error fetching selected values:", err);
+        console.error("[REDUCE] Error fetching selected values:", err);
+        
+        // Retry on error
+        if (retryCount < 3) {
+          console.log(`[REDUCE] Error occurred, retrying in 500ms...`);
+          setTimeout(() => fetchSelectedValues(retryCount + 1), 500);
+        }
       }
     }
     fetchSelectedValues();
@@ -75,6 +92,9 @@ export default function ValuesReducePage() {
     
     try {
       const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+      console.log(`[REDUCE] Saving ${selectedValues.length} values for user: ${userId}`);
+      console.log(`[REDUCE] Values:`, selectedValues);
+      
       const res = await fetch(`${API_URL}/values/reduce`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -85,11 +105,12 @@ export default function ValuesReducePage() {
       });
 
       const data = await res.json();
-      console.log("Progress saved:", data);
+      console.log("[REDUCE] Progress saved successfully:", data);
+      console.log("[REDUCE] Navigating to /values/choose");
 
       router.push("/values/choose"); // kolejny etap
     } catch (err) {
-      console.error("Error saving progress:", err);
+      console.error("[REDUCE] Error saving progress:", err);
       alert("Could not save progress. Please try again.");
     }
   };
@@ -112,22 +133,28 @@ export default function ValuesReducePage() {
       </p>
 
       {/* Wybrane wartości */}
-      <div className="flex flex-wrap gap-2">
-        {selectedValues.map((value, index) => (
-          <span
-            key={index}
-            className="flex items-center space-x-1 bg-[var(--Chip-Active)] text-gray-900 text-sm px-4 py-2 rounded-full border border-[var(--Primary-7-main)]"
-          >
-            <span>{value}</span>
-            <button
-              type="button"
-              onClick={() => handleRemove(value)}
-              className="ml-2 text-gray-600 hover:text-red-500"
+      <div className="flex flex-wrap gap-2 min-h-[100px]">
+        {selectedValues.length === 0 ? (
+          <div className="text-gray-500 italic py-8 w-full text-center">
+            Loading your values...
+          </div>
+        ) : (
+          selectedValues.map((value, index) => (
+            <span
+              key={index}
+              className="flex items-center space-x-1 bg-[var(--Chip-Active)] text-gray-900 text-sm px-4 py-2 rounded-full border border-[var(--Primary-7-main)]"
             >
-              ✕
-            </button>
-          </span>
-        ))}
+              <span>{value}</span>
+              <button
+                type="button"
+                onClick={() => handleRemove(value)}
+                className="ml-2 text-gray-600 hover:text-red-500"
+              >
+                ✕
+              </button>
+            </span>
+          ))
+        )}
       </div>
 
       <div className="text-sm text-gray-500">

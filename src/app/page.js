@@ -146,12 +146,15 @@ export default function HomePage() {
             {/* Value Workshop */}
             <Link href="/values/init">
               <div
-                className="p-8 rounded-xl text-center hover:shadow-xl transition cursor-pointer transform hover:scale-105"
+                className="p-8 rounded-xl text-center hover:shadow-xl transition cursor-pointer transform hover:scale-105 relative"
                 style={{
                   background: "var(--Primary-1)",
                   border: "2px solid var(--Primary-7-main)",
                 }}
               >
+                <div className="absolute top-3 right-3 bg-orange-500 text-white text-xs font-bold px-3 py-1 rounded-full">
+                  BETA
+                </div>
                 <Star
                   className="w-12 h-12 mx-auto mb-4"
                   style={{ color: "var(--Secondary-5-main)" }}

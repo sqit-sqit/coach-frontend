@@ -263,12 +263,15 @@ export default function DashboardPage() {
         {/* 🔹 Warsztat wartości */}
         <Link href="/values/init">
           <div
-            className="p-6 rounded-lg text-center hover:shadow-lg transition cursor-pointer"
+            className="p-6 rounded-lg text-center hover:shadow-lg transition cursor-pointer relative"
             style={{
               background: "var(--Primary-1)",
               border: "2px solid var(--Primary-7-main)",
             }}
           >
+            <div className="absolute top-2 right-2 bg-orange-500 text-white text-xs font-bold px-2 py-1 rounded-full">
+              BETA
+            </div>
             <Star
               className="w-10 h-10 mx-auto mb-4"
               style={{ color: "var(--Secondary-5-main)" }}
@@ -282,7 +285,7 @@ export default function DashboardPage() {
 
         {/* 🔹 Model GROW */}
         <div
-          className="p-6 rounded-lg text-center hover:shadow-lg transition"
+          className="p-6 rounded-lg text-center opacity-60"
           style={{
             background: "var(--Primary-1)",
             border: "2px solid var(--Primary-7-main)",
@@ -293,30 +296,34 @@ export default function DashboardPage() {
             style={{ color: "var(--Secondary-5-main)" }}
           />
           <h2 className="text-xl font-semibold mb-2">Model GROW</h2>
-          <p className="text-gray-600">
+          <p className="text-gray-600 mb-4">
             Zdefiniuj cele i zaplanuj kroki działania.
           </p>
+          <div className="inline-block bg-gray-200 text-gray-600 px-3 py-1 rounded-full text-xs font-semibold">
+            Coming Soon
+          </div>
         </div>
 
         {/* 🔹 Chat */}
-        <Link href="/chat">
-          <div
-            className="p-6 rounded-lg text-center hover:shadow-lg transition cursor-pointer"
-            style={{
-              background: "var(--Primary-1)",
-              border: "2px solid var(--Primary-7-main)",
-            }}
-          >
-            <MessageSquare
-              className="w-10 h-10 mx-auto mb-4"
-              style={{ color: "var(--Secondary-5-main)" }}
-            />
-            <h2 className="text-xl font-semibold mb-2">Chat</h2>
-            <p className="text-gray-600">
-              Rozmawiaj z AI w nowej mini-aplikacji.
-            </p>
+        <div
+          className="p-6 rounded-lg text-center opacity-60"
+          style={{
+            background: "var(--Primary-1)",
+            border: "2px solid var(--Primary-7-main)",
+          }}
+        >
+          <MessageSquare
+            className="w-10 h-10 mx-auto mb-4"
+            style={{ color: "var(--Secondary-5-main)" }}
+          />
+          <h2 className="text-xl font-semibold mb-2">AI Coach Chat</h2>
+          <p className="text-gray-600 mb-4">
+            Rozmawiaj z AI w nowej mini-aplikacji.
+          </p>
+          <div className="inline-block bg-gray-200 text-gray-600 px-3 py-1 rounded-full text-xs font-semibold">
+            Coming Soon
           </div>
-        </Link>
+        </div>
       </div>
       </div>
 

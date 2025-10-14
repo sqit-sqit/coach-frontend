@@ -85,6 +85,7 @@ export function useAuth() {
     setUser(null)
     setToken(null)
     localStorage.removeItem('auth_token')
+    localStorage.removeItem('guest_user_id')  // Wyczyść guest_user_id przy wylogowaniu
     
     // Wyślij custom event dla tej samej karty
     window.dispatchEvent(new CustomEvent('authChange', {

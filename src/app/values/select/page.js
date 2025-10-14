@@ -86,6 +86,9 @@ export default function ValuesSelectPage() {
     
     try {
       const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+      console.log(`[SELECT] Saving ${selectedValues.length} values for user: ${userId}`);
+      console.log(`[SELECT] Values:`, selectedValues);
+      
       const res = await fetch(`${API_URL}/values/select`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -96,7 +99,8 @@ export default function ValuesSelectPage() {
       });
 
       const data = await res.json();
-      console.log("Progress saved:", data);
+      console.log("[SELECT] Progress saved successfully:", data);
+      console.log("[SELECT] Navigating to /values/reduce");
       router.push("/values/reduce");
     } catch (err) {
       console.error("Error saving progress:", err);
