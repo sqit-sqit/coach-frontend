@@ -18,6 +18,10 @@ export default function AdminPanel() {
   // AI Models state
   const [aiModels, setAiModels] = useState({ configs: {}, available_models: [] });
   const [editingModel, setEditingModel] = useState(null);
+  
+  // Users state
+  const [users, setUsers] = useState([]);
+  const [showUsers, setShowUsers] = useState(false);
 
   // Sprawdź czy admin key jest w localStorage
   useEffect(() => {
@@ -63,6 +67,9 @@ export default function AdminPanel() {
         setAiModels(aiModelsData);
       }
       
+      // Pobierz użytkowników
+      await fetchUsers(key);
+      
       setIsAuthenticated(true);
       localStorage.setItem('admin_key', key);
       
@@ -86,7 +93,47 @@ export default function AdminPanel() {
     setConversations([]);
     setStats(null);
     setSelectedConversation(null);
+    setUsers([]);
+    setShowUsers(false);
     localStorage.removeItem('admin_key');
+  };
+
+  const fetchUsers = async (key) => {
+    try {
+      const response = await fetch(`${API_URL}/admin/users?admin_key=${key}&limit=200`);
+      if (response.ok) {
+        const data = await response.json();
+        setUsers(data.users || []);
+      }
+    } catch (err) {
+      console.error("Error fetching users:", err);
+    }
+  };
+
+  const exportUsersToCSV = () => {
+    if (users.length === 0) return;
+    
+    const headers = ['Email', 'Name', 'Created At', 'Last Activity', 'Total Sessions', 'Recent Sessions (30d)', 'Status'];
+    const csvContent = [
+      headers.join(','),
+      ...users.map(user => [
+        user.email,
+        user.name || '',
+        user.created_at || '',
+        user.last_activity || '',
+        user.total_sessions || 0,
+        user.recent_sessions_30d || 0,
+        user.is_active ? 'Active' : 'Inactive'
+      ].join(','))
+    ].join('\n');
+    
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `users_${new Date().toISOString().split('T')[0]}.csv`;
+    a.click();
+    window.URL.revokeObjectURL(url);
   };
 
   const exportToCSV = () => {
@@ -193,7 +240,7 @@ export default function AdminPanel() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex justify-between items-center">
             <h1 className="text-2xl font-bold text-gray-900">
-              Admin Panel - Conversations
+              Admin Panel
             </h1>
             <div className="flex gap-4">
               <button
@@ -214,6 +261,22 @@ export default function AdminPanel() {
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Navigation */}
+        <div className="flex space-x-4 mb-6">
+          <button
+            onClick={() => setShowUsers(false)}
+            className={`px-4 py-2 rounded ${!showUsers ? 'bg-blue-500 text-white' : 'bg-gray-200'}`}
+          >
+            Conversations
+          </button>
+          <button
+            onClick={() => setShowUsers(true)}
+            className={`px-4 py-2 rounded ${showUsers ? 'bg-blue-500 text-white' : 'bg-gray-200'}`}
+          >
+            Users
+          </button>
+        </div>
+
         {/* Stats */}
         {stats && (
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
@@ -342,17 +405,78 @@ export default function AdminPanel() {
           </div>
         </div>
 
+        {/* Users Section */}
+        {showUsers && (
+          <div className="bg-white rounded-lg shadow p-6 mb-8">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-bold">Registered Users ({users.length})</h2>
+              <button
+                onClick={exportUsersToCSV}
+                className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
+              >
+                Export CSV
+              </button>
+            </div>
+            
+            <div className="overflow-x-auto">
+              <table className="min-w-full table-auto">
+                <thead>
+                  <tr className="bg-gray-50">
+                    <th className="px-4 py-2 text-left">Email</th>
+                    <th className="px-4 py-2 text-left">Name</th>
+                    <th className="px-4 py-2 text-left">Created</th>
+                    <th className="px-4 py-2 text-left">Last Activity</th>
+                    <th className="px-4 py-2 text-left">Sessions</th>
+                    <th className="px-4 py-2 text-left">Recent (30d)</th>
+                    <th className="px-4 py-2 text-left">Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {users.map((user, index) => (
+                    <tr key={user.user_id} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                      <td className="px-4 py-2">{user.email}</td>
+                      <td className="px-4 py-2">{user.name || 'N/A'}</td>
+                      <td className="px-4 py-2">
+                        {user.created_at ? new Date(user.created_at).toLocaleDateString() : 'N/A'}
+                      </td>
+                      <td className="px-4 py-2">
+                        {user.last_activity ? new Date(user.last_activity).toLocaleDateString() : 'Never'}
+                      </td>
+                      <td className="px-4 py-2">{user.total_sessions}</td>
+                      <td className="px-4 py-2">{user.recent_sessions_30d}</td>
+                      <td className="px-4 py-2">
+                        <span className={`px-2 py-1 rounded text-xs ${
+                          user.is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                        }`}>
+                          {user.is_active ? 'Active' : 'Inactive'}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            
+            {users.length === 0 && (
+              <p className="text-gray-500 text-center py-4">No users found</p>
+            )}
+          </div>
+        )}
+
         {/* Export Button */}
-        <div className="mb-4 flex justify-end">
-          <button
-            onClick={exportToCSV}
-            className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
-          >
-            📊 Export to CSV
-          </button>
-        </div>
+        {!showUsers && (
+          <div className="mb-4 flex justify-end">
+            <button
+              onClick={exportToCSV}
+              className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
+            >
+              📊 Export to CSV
+            </button>
+          </div>
+        )}
 
         {/* Conversations List */}
+        {!showUsers && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Left: List */}
           <div className="bg-white rounded-lg shadow overflow-hidden">
@@ -481,6 +605,7 @@ export default function AdminPanel() {
             )}
           </div>
         </div>
+        )}
       </div>
     </div>
   );

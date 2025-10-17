@@ -11,6 +11,7 @@
     "baseline-browser-mapping": "^2.8.6",
     "browserslist": "^4.26.2",
     "caniuse-lite": "^1.0.30001743",
+    "d3": "^7.9.0",
     "electron-to-chromium": "^1.5.222",
     "escalade": "^3.2.0",
     "fraction.js": "^4.3.7",

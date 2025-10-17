@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Star, Target, MessageSquare, User, LogOut, Clock, CheckCircle, TrendingUp, Trash2 } from "lucide-react";
+import { Star, Target, MessageSquare, User, LogOut, Clock, CheckCircle, TrendingUp, Trash2, Sparkles } from "lucide-react";
 import { useAuth } from "hooks/useAuth";
 import DeleteAccountModal from "components/DeleteAccountModal";
 
@@ -283,6 +283,29 @@ export default function DashboardPage() {
           </div>
         </Link>
 
+        {/* 🔹 Human Design */}
+        <Link href="/hd">
+          <div
+            className="p-6 rounded-lg text-center hover:shadow-lg transition cursor-pointer relative"
+            style={{
+              background: "var(--Primary-1)",
+              border: "2px solid var(--Primary-7-main)",
+            }}
+          >
+            <div className="absolute top-2 right-2 bg-orange-500 text-white text-xs font-bold px-2 py-1 rounded-full">
+              Beta
+            </div>
+            <Sparkles
+              className="w-10 h-10 mx-auto mb-4"
+              style={{ color: "var(--Secondary-5-main)" }}
+            />
+            <h2 className="text-xl font-semibold mb-2">Human Design</h2>
+            <p className="text-gray-600">
+              Odkryj swoją unikalną naturę i strategię życia.
+            </p>
+          </div>
+        </Link>
+
         {/* 🔹 Model GROW */}
         <div
           className="p-6 rounded-lg text-center opacity-60"
@@ -305,21 +328,21 @@ export default function DashboardPage() {
         </div>
 
         {/* 🔹 Chat */}
-        <div
+          <div
           className="p-6 rounded-lg text-center opacity-60"
-          style={{
-            background: "var(--Primary-1)",
-            border: "2px solid var(--Primary-7-main)",
-          }}
-        >
-          <MessageSquare
-            className="w-10 h-10 mx-auto mb-4"
-            style={{ color: "var(--Secondary-5-main)" }}
-          />
+            style={{
+              background: "var(--Primary-1)",
+              border: "2px solid var(--Primary-7-main)",
+            }}
+          >
+            <MessageSquare
+              className="w-10 h-10 mx-auto mb-4"
+              style={{ color: "var(--Secondary-5-main)" }}
+            />
           <h2 className="text-xl font-semibold mb-2">AI Coach Chat</h2>
           <p className="text-gray-600 mb-4">
-            Rozmawiaj z AI w nowej mini-aplikacji.
-          </p>
+              Rozmawiaj z AI w nowej mini-aplikacji.
+            </p>
           <div className="inline-block bg-gray-200 text-gray-600 px-3 py-1 rounded-full text-xs font-semibold">
             Coming Soon
           </div>

@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Star, Target, MessageSquare, Heart, Users, TrendingUp } from "lucide-react";
+import { Star, Target, MessageSquare, Heart, Users, TrendingUp, Sparkles } from "lucide-react";
 
 export default function HomePage() {
   const [isLoggedIn, setIsLoggedIn] = useState(false)
@@ -178,6 +178,7 @@ export default function HomePage() {
                 </div>
               </div>
             </Link>
+
 
             {/* GROW Model - Coming Soon */}
             <div
