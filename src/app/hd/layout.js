@@ -1,11 +1,12 @@
 "use client";
 
 import { Suspense } from "react";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, usePathname } from "next/navigation";
 import WorkshopLayout from "../../components/layouts/WorkshopLayout";
 
 function HDLayoutContent({ children }) {
   const searchParams = useSearchParams();
+  const pathname = usePathname();
   const currentStep = searchParams.get('step') || 1;
   
   // Determine if we should show back button
@@ -27,8 +28,8 @@ function HDLayoutContent({ children }) {
     <WorkshopLayout 
       width="default" 
       background="gray"
-      showBackButton={showBackButton}
-      backButtonProps={{ onClick: handleBack }}
+      showBackButton={true}
+      backButtonProps={{ onClick: () => window.history.back() }}
     >
       {children}
     </WorkshopLayout>

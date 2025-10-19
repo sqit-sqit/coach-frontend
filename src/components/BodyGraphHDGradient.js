@@ -118,6 +118,142 @@ export default function BodyGraphHDGradient({
     return [cx + dx, cy + dy];
   };
 
+  const getCurvedPathData = (x1, y1, x2, y2, gateA, gateB) => {
+    // Lista kanałów które mają być prostymi liniami
+    const straightChannels = [
+      [47,64], [24,61], [4,63], [17,62], [11,56], [23,43], [7,31], [1,8], [13,33], [15,5], [2,14], [29,46], [42,53], [3,60], [9,52],
+    ];
+    
+    // Sprawdź czy to kanał prosty na podstawie numerów bramek
+    const isStraight = straightChannels.some(([a,b]) => 
+      (a === gateA && b === gateB) || (a === gateB && b === gateA)
+    );
+    
+    if (isStraight) {
+      // Linia prosta
+      return `M ${x1} ${y1} L ${x2} ${y2}`;
+    }
+    
+    // Specjalna krzywizna w dół dla kanałów [30,41], [50,27], [6,59], [25,51]
+    const isDownCurve = 
+      (gateA === 30 && gateB === 41) || (gateA === 41 && gateB === 30) ||
+      (gateA === 50 && gateB === 27) || (gateA === 27 && gateB === 50) ||
+      (gateA === 6 && gateB === 59) || (gateA === 59 && gateB === 6) ||
+      (gateA === 25 && gateB === 51) || (gateA === 51 && gateB === 25);
+    
+    // Specjalna krzywizna w górę - wyłączone, bo [36,35] i [12,22] są teraz w isExtraLargeCurve
+    const isUpCurve = false;
+    
+    // Większy promień krzywizny dla kanału [10,34]
+    const isLargeCurve = 
+      (gateA === 10 && gateB === 34) || (gateA === 34 && gateB === 10);
+    
+    // Bardzo duży promień krzywizny dla kanałów [48,16], [57,20], [35,36], [12,22]
+    const isExtraLargeCurve = 
+      (gateA === 48 && gateB === 16) || (gateA === 16 && gateB === 48) ||
+      (gateA === 57 && gateB === 20) || (gateA === 20 && gateB === 57) ||
+      (gateA === 35 && gateB === 36) || (gateA === 36 && gateB === 35) ||
+      (gateA === 12 && gateB === 22) || (gateA === 22 && gateB === 12);
+    
+    // Super duży promień krzywizny dla kanału [20,34]
+    const isSuperLargeCurve = 
+      (gateA === 20 && gateB === 34) || (gateA === 34 && gateB === 20);
+    
+    if (isDownCurve) {
+      // Krzywizna w dół
+      const dx = x2 - x1;
+      const dy = y2 - y1;
+      const mx = (x1 + x2) / 2;
+      const my = (y1 + y2) / 2;
+      const len = Math.hypot(dx, dy) || 1;
+      const nx = dy / len;  // Odwrócone dla krzywizny w dół
+      const ny = -dx / len; // Odwrócone dla krzywizny w dół
+      const offset = 28;
+      const cx = mx + nx * offset;
+      const cy = my + ny * offset;
+      return `M ${x1} ${y1} Q ${cx} ${cy} ${x2} ${y2}`;
+    }
+    
+    if (isUpCurve) {
+      // Krzywizna w górę (przeciwieństwo standardowej)
+      const dx = x2 - x1;
+      const dy = y2 - y1;
+      const mx = (x1 + x2) / 2;
+      const my = (y1 + y2) / 2;
+      const len = Math.hypot(dx, dy) || 1;
+      const nx = -dy / len; // Standardowe dla krzywizny w górę
+      const ny = dx / len;  // Standardowe dla krzywizny w górę
+      const offset = -28; // Ujemny offset dla krzywizny w górę
+      const cx = mx + nx * offset;
+      const cy = my + ny * offset;
+      return `M ${x1} ${y1} Q ${cx} ${cy} ${x2} ${y2}`;
+    }
+    
+    if (isSuperLargeCurve) {
+      // Super duży promień krzywizny dla kanału [20,34]
+      const dx = x2 - x1;
+      const dy = y2 - y1;
+      const mx = (x1 + x2) / 2;
+      const my = (y1 + y2) / 2;
+      const len = Math.hypot(dx, dy) || 1;
+      const nx = -dy / len;
+      const ny = dx / len;
+      const offset = 120; // Super duży offset dla super dużej krzywizny
+      const cx = mx + nx * offset;
+      const cy = my + ny * offset;
+      return `M ${x1} ${y1} Q ${cx} ${cy} ${x2} ${y2}`;
+    }
+    
+    if (isExtraLargeCurve) {
+      // Bardzo duży promień krzywizny
+      const dx = x2 - x1;
+      const dy = y2 - y1;
+      const mx = (x1 + x2) / 2;
+      const my = (y1 + y2) / 2;
+      const len = Math.hypot(dx, dy) || 1;
+      const nx = -dy / len;
+      const ny = dx / len;
+      
+      // Sprawdź czy to kanały które powinny mieć krzywiznę w górę
+      const isUpwardCurve = 
+        (gateA === 35 && gateB === 36) || (gateA === 36 && gateB === 35) ||
+        (gateA === 12 && gateB === 22) || (gateA === 22 && gateB === 12);
+      
+      const offset = isUpwardCurve ? -80 : 80; // Ujemny offset dla krzywizny w górę
+      const cx = mx + nx * offset;
+      const cy = my + ny * offset;
+      return `M ${x1} ${y1} Q ${cx} ${cy} ${x2} ${y2}`;
+    }
+    
+    if (isLargeCurve) {
+      // Większy promień krzywizny
+      const dx = x2 - x1;
+      const dy = y2 - y1;
+      const mx = (x1 + x2) / 2;
+      const my = (y1 + y2) / 2;
+      const len = Math.hypot(dx, dy) || 1;
+      const nx = -dy / len;
+      const ny = dx / len;
+      const offset = 50; // Większy offset dla większego promienia
+      const cx = mx + nx * offset;
+      const cy = my + ny * offset;
+      return `M ${x1} ${y1} Q ${cx} ${cy} ${x2} ${y2}`;
+    }
+    
+    // Domyślna krzywa
+    const dx = x2 - x1;
+    const dy = y2 - y1;
+    const mx = (x1 + x2) / 2;
+    const my = (y1 + y2) / 2;
+    const len = Math.hypot(dx, dy) || 1;
+    const nx = -dy / len;
+    const ny = dx / len;
+    const offset = 28;
+    const cx = mx + nx * offset;
+    const cy = my + ny * offset;
+    return `M ${x1} ${y1} Q ${cx} ${cy} ${x2} ${y2}`;
+  };
+
   const curvedPath = (x1, y1, x2, y2, width, color, key, gateA, gateB) => {
     // Lista kanałów które mają być prostymi liniami
     const straightChannels = [
@@ -219,11 +355,11 @@ export default function BodyGraphHDGradient({
   return (
     <div className="flex justify-center">
       <svg
-        width={560}
-        height={800}
-        viewBox="0 0 600 740"
+        width="100%"
+        height="auto"
+        viewBox="0 -20 600 760"
+        className="max-w-[400px] sm:max-w-[500px] md:w-auto md:h-[500px] lg:h-[600px] xl:h-[700px] md:max-w-none bg-white rounded-xl shadow"
         xmlns="http://www.w3.org/2000/svg"
-        className="bg-white rounded-xl shadow"
       >
         {/* Gradienty centrów */}
         <defs>
@@ -235,18 +371,32 @@ export default function BodyGraphHDGradient({
           ))}
         </defs>
 
-        {/* Kanały */}
+        {/* Kanały - tło (czerwone wypełnienie z czarnym obramowaniem) */}
         {CHANNELS.map(([a,b], index) => {
           const [x1,y1] = gatePos(a);
           const [x2,y2] = gatePos(b);
-          return curvedPath(x1,y1,x2,y2,2,"#e2e8f0",`bg-${a}-${b}-${index}`, a, b);
+          const d = getCurvedPathData(x1,y1,x2,y2, a, b);
+          return (
+            <g key={`bg-${a}-${b}-${index}`}>
+              <path d={d} fill="none" stroke="#000" strokeWidth="8" strokeLinecap="round" />
+              <path d={d} fill="none" stroke="#9ca3af" strokeWidth="6" strokeLinecap="round" />
+            </g>
+          );
         })}
+        
+        {/* Kanały - aktywne (niebieskie wypełnienie z czarnym obramowaniem) */}
         {CHANNELS.map(([a,b], index) => {
           const key=`${a}-${b}`;
           if (!activeChannelSet.has(key)) return null;
           const [x1,y1]=gatePos(a);
           const [x2,y2]=gatePos(b);
-          return curvedPath(x1,y1,x2,y2,6,"#2563eb",`act-${a}-${b}-${index}`, a, b);
+          const d = getCurvedPathData(x1,y1,x2,y2, a, b);
+          return (
+            <g key={`act-${a}-${b}-${index}`}>
+              <path d={d} fill="none" stroke="#000" strokeWidth="8" strokeLinecap="round" />
+              <path d={d} fill="none" stroke="#2563eb" strokeWidth="6" strokeLinecap="round" />
+            </g>
+          );
         })}
 
         {/* Centra */}

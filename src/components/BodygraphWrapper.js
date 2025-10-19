@@ -1,8 +1,52 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import BodyGraphHDGradient from './BodyGraphHDGradient';
+import GateCard from './ui/GateCard';
+import GateModal from './ui/GateModal';
 
 export default function BodygraphWrapper({ sessionData }) {
+  const [gatesData, setGatesData] = useState({});
+  const [loadingGates, setLoadingGates] = useState(true);
+  const [selectedGate, setSelectedGate] = useState(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  useEffect(() => {
+    const fetchGatesData = async () => {
+      try {
+        const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+        console.log('Fetching gates data from:', `${API_URL}/hd/gates/pl`);
+        const response = await fetch(`${API_URL}/hd/gates/pl`);
+        if (response.ok) {
+          const data = await response.json();
+          console.log('Gates data loaded:', data);
+          setGatesData(data);
+        } else {
+          console.error('Failed to fetch gates data:', response.status);
+        }
+      } catch (error) {
+        console.error('Error fetching gates data:', error);
+      } finally {
+        setLoadingGates(false);
+      }
+    };
+
+    fetchGatesData();
+  }, []);
+
+  const handleGateClick = (gateNumber, gateInfo) => {
+    setSelectedGate({
+      gateNumber,
+      ...gateInfo
+    });
+    setIsModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setSelectedGate(null);
+  };
+
   if (!sessionData) {
     return <div>Ładowanie danych...</div>;
   }
@@ -41,88 +85,83 @@ export default function BodygraphWrapper({ sessionData }) {
   };
 
   return (
+    <>
     <div className="bg-white p-8 rounded-lg shadow-lg">
-      {/* Header */}
-      <div className="text-center mb-8">
-        <h2 className="text-2xl font-bold text-gray-900 mb-2">{sessionData.name}</h2>
-        <p className="text-gray-600">Human Design Bodygraph</p>
-        <div className="mt-4 p-3 bg-green-100 border-2 border-green-500 rounded-lg">
-          <p className="text-green-700 font-bold">✨ PROSTY I ELEGANCKI BODYGRAPH!</p>
-        </div>
-      </div>
 
-      {/* Bodygraph z panelami po bokach */}
-      <div className="flex items-start justify-center gap-6">
-        {/* Design Panel (lewa strona) */}
-        <div className="flex flex-col items-center">
-          <h3 className="font-semibold text-rose-800 mb-3 text-center">Design</h3>
-          <div className="w-25 bg-rose-50 border border-rose-200 rounded-lg p-4">
-            <div className="space-y-2">
-              {design.map((a, idx) => (
-                <div key={`d-${idx}`} className="flex items-center justify-between bg-white/70 rounded px-2 py-1 text-lg">
-                  <span className="text-gray-700">{planetSymbols[a.planet] || a.planet}</span>
-                  <span className="font-medium text-rose-700">{fmt(a)}</span>
-                </div>
-              ))}
+        {/* Bodygraph z panelami - responsive layout */}
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-2 md:gap-4 lg:gap-6">
+          {/* Bodygraph */}
+          <div className="order-1">
+            <BodyGraphHDGradient 
+              definedCenters={definedCenters}
+              definedChannels={definedChannels}
+              activeGates={activeGates}
+            />
+          </div>
+
+          {/* Combined Design & Personality Panel */}
+          <div className="flex flex-col items-center order-2 sm:order-1">
+            <h3 className="font-semibold text-gray-800 mb-2 text-center text-xs md:text-sm">Design & Personality</h3>
+            <div className="min-w-20 md:min-w-24 lg:min-w-28 max-w-32 md:max-w-36 lg:max-w-40 bg-gray-50 border border-gray-200 rounded-lg p-2 md:p-3">
+              <div className="space-y-1">
+                {design.map((dActivation, idx) => {
+                  // Znajdź odpowiadającą aktywację Personality dla tej samej planety
+                  const pActivation = personality.find(p => p.planet === dActivation.planet);
+                  
+                  return (
+                    <div key={`combined-${idx}`} className="flex items-center justify-between bg-white rounded px-2 py-1 text-xs md:text-sm gap-1 md:gap-2">
+                      <span className="font-medium text-rose-700 flex-shrink-0 min-w-0">{fmt(dActivation)}</span>
+                      <span className="font-bold text-gray-800 text-lg flex-shrink-0">{planetSymbols[dActivation.planet] || dActivation.planet}</span>
+                      <span className="font-medium text-gray-900 flex-shrink-0 min-w-0">{pActivation ? fmt(pActivation) : '-'}</span>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           </div>
         </div>
 
-        {/* Bodygraph */}
-        <div className="flex-shrink-0">
-          <BodyGraphHDGradient 
-            definedCenters={definedCenters}
-            definedChannels={definedChannels}
-            activeGates={activeGates}
-          />
-        </div>
-
-        {/* Personality Panel (prawa strona) */}
-        <div className="flex flex-col items-center">
-          <h3 className="font-semibold text-gray-800 mb-3 text-center">Personality</h3>
-          <div className="w-25 bg-gray-100 border border-gray-200 rounded-lg p-4">
-            <div className="space-y-2">
-              {personality.map((a, idx) => (
-                <div key={`p-${idx}`} className="flex items-center justify-between bg-white rounded px-2 py-1 text-lg">
-                  <span className="font-medium text-gray-900">{fmt(a)}</span>
-                  <span className="text-gray-700">{planetSymbols[a.planet] || a.planet}</span>
-                </div>
-              ))}
+        {/* Gates Section */}
+        <div className="mt-8 pt-8 border-t border-gray-200">
+          <h3 className="text-xl font-semibold mb-4">Aktywne Bramki (Gates)</h3>
+          {loadingGates ? (
+            <div className="text-center py-4">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600 mx-auto mb-2"></div>
+              <p className="text-gray-600">Ładowanie danych bramek...</p>
             </div>
-          </div>
+          ) : (
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+              {activeGates.sort((a, b) => a - b).map((gate) => {
+                const isDesign = designGates.has(gate);
+                const isPersonality = personalityGates.has(gate);
+                const isBoth = isDesign && isPersonality;
+                const gateInfo = gatesData[gate];
+                
+                const activationType = isBoth ? 'both' : isDesign ? 'design' : isPersonality ? 'personality' : 'none';
+                
+                console.log(`Rendering gate ${gate}:`, { isDesign, isPersonality, isBoth, gateInfo, activationType });
+                
+                return (
+                  <GateCard
+                    key={gate}
+                    gateNumber={gate}
+                    gateInfo={gateInfo}
+                    activationType={activationType}
+                    onClick={() => handleGateClick(gate, gateInfo)}
+                  />
+                );
+              })}
+            </div>
+          )}
         </div>
+
       </div>
 
-
-      {/* Legend */}
-      <div className="mt-6 grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-        <div className="flex items-center space-x-2">
-          <div className="w-4 h-4 rounded bg-green-600 border border-green-800"></div>
-          <span>Definiowane centrum</span>
-        </div>
-        <div className="flex items-center space-x-2">
-          <div className="w-4 h-4 bg-white border-2 border-gray-400 rounded"></div>
-          <span>Niedefiniowane centrum</span>
-        </div>
-        <div className="flex items-center space-x-2">
-          <div className="w-4 h-1 rounded bg-blue-600"></div>
-          <span>Definiowany kanał</span>
-        </div>
-        <div className="flex items-center space-x-2">
-          <div className="w-4 h-1 rounded bg-gray-300"></div>
-          <span>Niedefiniowany kanał</span>
-        </div>
-      </div>
-
-      {/* Legend */}
-      <div className="mt-6 p-4 bg-gray-100 rounded-lg text-sm">
-        <h3 className="font-semibold mb-2">Legenda kolorów:</h3>
-        <div className="flex flex-wrap gap-4">
-          <div className="flex items-center gap-2"><span className="inline-block w-3 h-3 rounded-full bg-black"></span><span>Personality (czarne)</span></div>
-          <div className="flex items-center gap-2"><span className="inline-block w-3 h-3 rounded-full bg-rose-600"></span><span>Design (czerwone)</span></div>
-          <div className="flex items-center gap-2"><span className="inline-block w-3 h-3 rounded-full bg-[linear-gradient(90deg,black_0%,black_50%,#e11d48_50%,#e11d48_100%)]"></span><span>Obie strony</span></div>
-        </div>
-      </div>
-    </div>
+      <GateModal
+        gateInfo={selectedGate}
+        isOpen={isModalOpen}
+        onClose={handleCloseModal}
+      />
+    </>
   );
 }

@@ -4,233 +4,200 @@ import { useState, useEffect, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "../../../hooks/useAuth";
 import { getOrCreateGuestId } from "../../../lib/guestUser";
-import WorkshopLayout from "../../../components/layouts/WorkshopLayout";
-import { Send, MessageSquare, ArrowRight } from "lucide-react";
+import ChatBubble from "../../../components/ui/ChatBubble";
+import ChatInput from "../../../components/ui/ChatInput";
+import QuickChip from "../../../components/ui/QuickChip";
 
 export default function HDChatPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { user, isAuthenticated } = useAuth();
   const [messages, setMessages] = useState([]);
-  const [inputMessage, setInputMessage] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [sessionData, setSessionData] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [chatSessionId, setChatSessionId] = useState(null);
+  const [hdSessionId, setHdSessionId] = useState(null);
+  const [hdData, setHdData] = useState(null);
   const messagesEndRef = useRef(null);
 
-  // Get session ID from URL
-  const sessionId = searchParams.get('session_id') || '';
+  const sessionId = searchParams.get('session_id');
 
   useEffect(() => {
     if (sessionId) {
-      fetchSessionData();
-      fetchChatHistory();
+      setHdSessionId(sessionId);
+      fetchHdData();
+    } else {
+      router.push('/hd');
     }
   }, [sessionId]);
 
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
-
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
-
-  const fetchSessionData = async () => {
+  const fetchHdData = async () => {
     try {
       const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
       const response = await fetch(`${API_URL}/hd/chart/${sessionId}`);
-      
       if (response.ok) {
         const data = await response.json();
-        setSessionData(data);
+        setHdData(data);
+        startChatSession();
       }
-    } catch (err) {
-      console.error("Error fetching session data:", err);
+    } catch (error) {
+      console.error("Error fetching HD data:", error);
     }
   };
 
-  const fetchChatHistory = async () => {
-    try {
-      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
-      const response = await fetch(`${API_URL}/hd/chat/${sessionId}`);
-      
-      if (response.ok) {
-        const data = await response.json();
-        setMessages(data.messages || []);
-      }
-    } catch (err) {
-      console.error("Error fetching chat history:", err);
-    }
-  };
-
-  const sendMessage = async (e) => {
-    e.preventDefault();
-    if (!inputMessage.trim() || loading) return;
-
-    const userMessage = {
-      role: "user",
-      content: inputMessage,
-      created_at: new Date().toISOString(),
-      message_order: messages.length + 1
-    };
-
-    setMessages(prev => [...prev, userMessage]);
-    setInputMessage("");
-    setLoading(true);
-
+  const startChatSession = async () => {
     try {
       const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
       const response = await fetch(`${API_URL}/hd/chat`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          session_id: sessionId,
-          message: inputMessage
-        })
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ session_id: sessionId })
       });
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+      if (response.ok) {
+        const data = await response.json();
+        setChatSessionId(data.chat_session_id);
+        setMessages([{
+          id: 'welcome',
+          role: 'assistant',
+          content: data.message,
+          timestamp: new Date().toISOString()
+        }]);
       }
-
-      const data = await response.json();
-      
-      const aiMessage = {
-        role: "assistant",
-        content: data.response,
-        created_at: new Date().toISOString(),
-        message_order: messages.length + 2
-      };
-
-      setMessages(prev => [...prev, aiMessage]);
-    } catch (err) {
-      console.error("Error sending message:", err);
-      const errorMessage = {
-        role: "assistant",
-        content: "Przepraszam, wystąpił błąd. Spróbuj ponownie.",
-        created_at: new Date().toISOString(),
-        message_order: messages.length + 2
-      };
-      setMessages(prev => [...prev, errorMessage]);
-    } finally {
-      setLoading(false);
+    } catch (error) {
+      console.error("Error starting chat session:", error);
     }
   };
 
-  const handleGenerateSummary = () => {
-    router.push(`/hd/summary?session_id=${sessionId}`);
+  const handleSendMessage = async (message) => {
+    if (!message.trim() || !chatSessionId) return;
+
+    const userMessage = {
+      role: 'user',
+      content: message
+    };
+
+    setMessages(prev => [...prev, userMessage]);
+    setIsLoading(true);
+
+    try {
+      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+      const response = await fetch(`${API_URL}/hd/chat/${chatSessionId}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          message: message,
+          history: messages.map(m => ({
+            role: m.role,
+            content: m.content
+          }))
+        })
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        const aiMessage = {
+          role: 'assistant',
+          content: data.response
+        };
+        setMessages(prev => [...prev, aiMessage]);
+      }
+    } catch (error) {
+      console.error("Error sending message:", error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  if (!sessionId) {
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
+
+  if (!hdData) {
     return (
-      <WorkshopLayout width="default" background="gray">
-        <div className="max-w-4xl mx-auto text-center py-12">
-          <div className="text-red-600 mb-4">
-            <MessageSquare className="w-16 h-16 mx-auto mb-4" />
-            <h2 className="text-2xl font-bold mb-2">Błąd</h2>
-            <p>Brak ID sesji</p>
-          </div>
-          <button
-            onClick={() => router.push("/hd")}
-            className="bg-purple-600 text-white px-6 py-3 rounded-lg hover:bg-purple-700 transition"
-          >
-            Wróć do początku
-          </button>
-        </div>
-      </WorkshopLayout>
+      <div className="max-w-4xl mx-auto text-center py-12">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
+        <p className="text-gray-600">Ładowanie danych Human Design...</p>
+      </div>
     );
   }
 
-  return (
-    <WorkshopLayout width="default" background="gray" showBackButton={true}>
-      <div className="max-w-4xl mx-auto">
-        {/* Header */}
-        <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900 mb-2">
-                Rozmowa z AI Coach
-              </h1>
-              {sessionData && (
-                <p className="text-gray-600">
-                  Twój Human Design: <span className="font-semibold text-purple-600">{sessionData.type}</span>
-                </p>
-              )}
-            </div>
-            <button
-              onClick={handleGenerateSummary}
-              className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition flex items-center"
-            >
-              Podsumowanie
-              <ArrowRight className="w-4 h-4 ml-2" />
-            </button>
-          </div>
-        </div>
+  const quickTips = [
+    {
+      label: "Wyjaśnij mój typ",
+      onClick: () => handleSendMessage("Wyjaśnij mi mój typ Human Design i jak wpływa na moje życie")
+    },
+    {
+      label: "Co oznaczają moje bramki",
+      onClick: () => handleSendMessage("Co oznaczają moje aktywne bramki i jak je wykorzystać?")
+    },
+    {
+      label: "Moja strategia",
+      onClick: () => handleSendMessage("Jak mogę zastosować moją strategię w codziennym życiu?")
+    }
+  ];
 
-        {/* Chat Messages */}
-        <div className="bg-white rounded-lg shadow-lg mb-6">
-          <div className="h-96 overflow-y-auto p-6 space-y-4">
-            {messages.length === 0 ? (
-              <div className="text-center text-gray-500 py-8">
-                <MessageSquare className="w-12 h-12 mx-auto mb-4 text-gray-300" />
-                <p>Rozpocznij rozmowę z AI Coach o Twoim Human Design</p>
+  const TypingIndicator = () => (
+    <div className="flex items-center gap-1">
+      <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce [animation-delay:-0.3s]"></span>
+      <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce [animation-delay:-0.15s]"></span>
+      <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></span>
+    </div>
+  );
+
+  return (
+    <div className="min-h-screen flex flex-col bg-[#F9F9FB]">
+      {/* Chat messages area */}
+      <div className="flex-1 overflow-y-auto">
+        <div className="space-y-6 px-4 sm:px-6 lg:px-8 pt-16">
+          {/* HD Data Summary */}
+          {hdData && (
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+              <h3 className="text-lg font-semibold text-blue-900 mb-2">Twoje Human Design</h3>
+              <div className="grid md:grid-cols-2 gap-4 text-sm">
+                <div><span className="font-medium">Typ:</span> {hdData.type}</div>
+                <div><span className="font-medium">Strategia:</span> {hdData.strategy}</div>
+                <div><span className="font-medium">Autorytet:</span> {hdData.authority}</div>
+                <div><span className="font-medium">Profil:</span> {hdData.profile}</div>
               </div>
-            ) : (
-              messages.map((message, index) => (
-                <div
-                  key={index}
-                  className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
-                >
-                  <div
-                    className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
-                      message.role === 'user'
-                        ? 'bg-purple-600 text-white'
-                        : 'bg-gray-100 text-gray-900'
-                    }`}
-                  >
-                    <p className="text-sm">{message.content}</p>
-                  </div>
-                </div>
-              ))
+            </div>
+          )}
+
+          {/* Wiadomości */}
+          <div className="space-y-6">
+            {messages.map((message, index) => (
+              <ChatBubble 
+                key={index} 
+                role={message.role}
+              >
+                {message.content && message.content.length > 0 ? (
+                  message.content
+                ) : message.role === "assistant" && isLoading ? (
+                  <TypingIndicator />
+                ) : null}
+              </ChatBubble>
+            ))}
+            {/* When loading but no placeholder exists for some reason, show indicator */}
+            {isLoading && messages.length === 0 && (
+              <ChatBubble role="assistant">
+                <TypingIndicator />
+              </ChatBubble>
             )}
-            
-            {loading && (
-              <div className="flex justify-start">
-                <div className="bg-gray-100 text-gray-900 px-4 py-2 rounded-lg">
-                  <div className="flex items-center space-x-2">
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-600"></div>
-                    <span className="text-sm">AI pisze...</span>
-                  </div>
-                </div>
-              </div>
-            )}
-            
             <div ref={messagesEndRef} />
           </div>
         </div>
-
-        {/* Input Form */}
-        <form onSubmit={sendMessage} className="bg-white rounded-lg shadow-lg p-6">
-          <div className="flex space-x-4">
-            <input
-              type="text"
-              value={inputMessage}
-              onChange={(e) => setInputMessage(e.target.value)}
-              placeholder="Zadaj pytanie o swój Human Design..."
-              className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-              disabled={loading}
-            />
-            <button
-              type="submit"
-              disabled={loading || !inputMessage.trim()}
-              className="bg-purple-600 text-white px-6 py-3 rounded-lg hover:bg-purple-700 disabled:opacity-50 transition flex items-center"
-            >
-              <Send className="w-5 h-5" />
-            </button>
-          </div>
-        </form>
       </div>
-    </WorkshopLayout>
+
+      {/* Input area – sticky na dole */}
+      <div className="bg-transparent sticky bottom-0">
+        <div className="space-y-4 px-4 sm:px-6 lg:px-8">
+          <div className="flex gap-2 justify-end">
+            {quickTips.map((tip, index) => (
+              <QuickChip key={index} label={tip.label} onClick={tip.onClick} />
+            ))}
+          </div>
+          <ChatInput onSend={handleSendMessage} disabled={isLoading} />
+        </div>
+      </div>
+    </div>
   );
 }
-

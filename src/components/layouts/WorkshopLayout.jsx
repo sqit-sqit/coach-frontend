@@ -25,7 +25,7 @@ export default function WorkshopLayout({
     <div className={`${backgroundClasses[background]} min-h-screen`}>
       <div className={`${widthClasses[width]} mx-auto w-full px-6 py-8 ${className} relative`}>
         {showBackButton && (
-          <div className="absolute top-4 left-4 z-10">
+          <div className="absolute top-4 left-4 z-20">
             <BackButton {...backButtonProps} />
           </div>
         )}

@@ -30,6 +30,9 @@ function HDInitContent() {
 
   // Get user ID (authenticated or guest)
   const userId = user?.user_id || getOrCreateGuestId();
+  
+  // Debug: log userId
+  console.log('HD Init - userId:', userId, 'user:', user, 'isAuthenticated:', isAuthenticated);
 
   // Check if this is regenerate mode
   useEffect(() => {
@@ -114,8 +117,8 @@ function HDInitContent() {
       const lat = selectedLocation?.lat || 52.2297;
       const lng = selectedLocation?.lng || 21.0122;
       
-      // Convert date string to ISO format for backend
-      const birthDateISO = new Date(formData.birthDate).toISOString();
+      // Convert date string to datetime format for backend
+      const birthDateISO = new Date(formData.birthDate).toISOString().split('T')[0] + 'T' + formData.birthTime + ':00';
       
       // Choose endpoint based on mode
       const endpoint = isRegenerateMode 
@@ -194,15 +197,14 @@ function HDInitContent() {
           <div className="space-y-6">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Imię i nazwisko *
+                Imię (opcjonalne)
               </label>
               <input
                 type="text"
                 value={formData.name}
                 onChange={(e) => setFormData({...formData, name: e.target.value})}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                placeholder="np. Jan Kowalski"
-                required
+                placeholder="np. Jan (opcjonalne)"
               />
             </div>
 
