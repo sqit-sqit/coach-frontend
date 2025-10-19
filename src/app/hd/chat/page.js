@@ -7,13 +7,26 @@ import { getOrCreateGuestId } from "../../../lib/guestUser";
 import ChatBubble from "../../../components/ui/ChatBubble";
 import ChatInput from "../../../components/ui/ChatInput";
 import QuickChip from "../../../components/ui/QuickChip";
+import TypingIndicator from "../../../components/ui/TypingIndicator";
+import { useStreamingChat } from "../../../hooks/useStreamingChat";
+import { useChatMessages } from "../../../hooks/useChatMessages";
 
 export default function HDChatPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { user, isAuthenticated } = useAuth();
-  const [messages, setMessages] = useState([]);
-  const [isLoading, setIsLoading] = useState(false);
+  
+  // Use shared hooks
+  const { sendMessage, isStreaming } = useStreamingChat();
+  const { 
+    messages, 
+    setMessages, 
+    isLoading, 
+    setIsLoading, 
+    addUserMessage, 
+    updateAssistantMessage 
+  } = useChatMessages();
+  
   const [chatSessionId, setChatSessionId] = useState(null);
   const [hdSessionId, setHdSessionId] = useState(null);
   const [hdData, setHdData] = useState(null);
@@ -71,41 +84,24 @@ export default function HDChatPage() {
   const handleSendMessage = async (message) => {
     if (!message.trim() || !chatSessionId) return;
 
-    const userMessage = {
-      role: 'user',
-      content: message
-    };
-
-    setMessages(prev => [...prev, userMessage]);
+    // Add user message and get assistant index
+    const assistantIndex = addUserMessage(message);
     setIsLoading(true);
 
-    try {
-      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
-      const response = await fetch(`${API_URL}/hd/chat/${chatSessionId}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          message: message,
-          history: messages.map(m => ({
-            role: m.role,
-            content: m.content
-          }))
-        })
-      });
+    // Create callback for updating assistant message
+    const onMessageUpdate = (content, append = false) => {
+      updateAssistantMessage(content, assistantIndex, append);
+    };
 
-      if (response.ok) {
-        const data = await response.json();
-        const aiMessage = {
-          role: 'assistant',
-          content: data.response
-        };
-        setMessages(prev => [...prev, aiMessage]);
-      }
-    } catch (error) {
-      console.error("Error sending message:", error);
-    } finally {
-      setIsLoading(false);
-    }
+    // Use shared streaming chat hook
+    await sendMessage(
+      `/hd/chat/${chatSessionId}/stream`,
+      message,
+      messages.map(m => ({ role: m.role, content: m.content })),
+      onMessageUpdate
+    );
+
+    setIsLoading(false);
   };
 
   useEffect(() => {
@@ -136,13 +132,6 @@ export default function HDChatPage() {
     }
   ];
 
-  const TypingIndicator = () => (
-    <div className="flex items-center gap-1">
-      <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce [animation-delay:-0.3s]"></span>
-      <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce [animation-delay:-0.15s]"></span>
-      <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></span>
-    </div>
-  );
 
   return (
     <div className="min-h-screen flex flex-col bg-[#F9F9FB]">
@@ -171,13 +160,13 @@ export default function HDChatPage() {
               >
                 {message.content && message.content.length > 0 ? (
                   message.content
-                ) : message.role === "assistant" && isLoading ? (
+                ) : message.role === "assistant" && (isLoading || isStreaming) ? (
                   <TypingIndicator />
                 ) : null}
               </ChatBubble>
             ))}
             {/* When loading but no placeholder exists for some reason, show indicator */}
-            {isLoading && messages.length === 0 && (
+            {(isLoading || isStreaming) && messages.length === 0 && (
               <ChatBubble role="assistant">
                 <TypingIndicator />
               </ChatBubble>
@@ -195,7 +184,7 @@ export default function HDChatPage() {
               <QuickChip key={index} label={tip.label} onClick={tip.onClick} />
             ))}
           </div>
-          <ChatInput onSend={handleSendMessage} disabled={isLoading} />
+          <ChatInput onSend={handleSendMessage} disabled={isLoading || isStreaming} />
         </div>
       </div>
     </div>
