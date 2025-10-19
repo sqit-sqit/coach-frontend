@@ -90,40 +90,69 @@ export default function ValuesChatPage() {
   // Po Welcome = user odpowiedział + AI przeszło do sekcji 2 (Meaning) = messages.length >= 4
   const isInWelcomeSection = chatMode === "chat" && messages.length < 4;
   
+  // 🔹 Wykryj czy jesteśmy w sekcji Welcome w trybie reflect
+  // Reflect Welcome = pierwsza wiadomość AI w trybie reflect, user jeszcze nie odpowiedział
+  // Sprawdź czy ostatnia wiadomość to assistant i czy to pierwsza wiadomość w trybie reflect
+  // W trybie reflect, po "Go to the next step" dodawana jest nowa wiadomość AI
+  const isInReflectWelcomeSection = chatMode === "reflect" && 
+    messages.length > 0 && 
+    messages[messages.length - 1].role === "assistant" &&
+    messages[messages.length - 1].content.includes("Every reflection deepens awareness");
+  
+  
   const quickTips = [
     // 🔹 HIDDEN for V1 - will be useful in future versions
     // {
     //   label: "Quick tips",
     //   onClick: () => handleSendMessage("Can you give me some quick tips about working with this value?"),
     // },
-    // Hide "Proceed" button if summary has been generated
-    ...(sessionSummary ? [] : [{
-      label: "Proceed",
-      onClick: () => {
-        console.log("Proceed clicked, chatMode:", chatMode, "isInWelcome:", isInWelcomeSection);
-        // W sekcji Welcome → Skip to reflection
-        // Po sekcji Welcome (w chat) → Go to reflection (reflect mode)
-        // W reflect mode → Generate summary
-        if (isInWelcomeSection) {
-          // Skip całego chat, idź do refleksji
-          handleGenerateSummary();
-        } else if (chatMode === "chat") {
-          // Przejdź z chat do reflect
-          handleJumpToSummary();
-        } else {
-          // W reflect → generuj summary
-          handleGenerateSummary();
+    // Hide chips if summary has been generated
+    ...(sessionSummary ? [] : [
+      // Show Yes/No chips in welcome sections (both chat and reflect)
+      ...(isInWelcomeSection || isInReflectWelcomeSection ? [
+        {
+          label: "Yes",
+          onClick: () => {
+            console.log("Yes clicked - sending as user message");
+            // Send "Yes" as if user typed it in input
+            handleSendMessage("Yes");
+          },
+        },
+        {
+          label: "No", 
+          onClick: () => {
+            console.log("No clicked - skip to summary");
+            // Skip to summary (same as old Proceed behavior)
+            handleGenerateSummary();
+          },
         }
-      },
-    }]),
+      ] : [
+        // After welcome sections, show single "Proceed" chip
+        {
+          label: "Proceed",
+          onClick: () => {
+            console.log("Proceed clicked, chatMode:", chatMode, "isInWelcome:", isInWelcomeSection, "isInReflectWelcome:", isInReflectWelcomeSection);
+            // Po sekcji Welcome (w chat) → Go to reflection (reflect mode)
+            // W reflect mode → Generate summary
+            if (chatMode === "chat") {
+              // Przejdź z chat do reflect
+              handleJumpToSummary();
+            } else {
+              // W reflect → generuj summary
+              handleGenerateSummary();
+            }
+          },
+        }
+      ])
+    ]),
   ];
 
   // 🔹 Obsługa przejścia do summary
   const handleJumpToSummary = async () => {
     console.log("handleJumpToSummary called, switching to reflect mode");
     
-    // Dodaj wiadomość użytkownika "Go to the next step"
-    const userMessage = { role: "user", content: "Go to the next step" };
+    // Dodaj wiadomość użytkownika "No, go to the next step"
+    const userMessage = { role: "user", content: "No, go to the next step" };
     setMessages(prev => [...prev, userMessage]);
     
     // Przełącz tryb na "reflect"
@@ -137,14 +166,14 @@ export default function ValuesChatPage() {
   const handleGenerateSummary = async () => {
     if (isStreaming || !userId) return; // Prevent concurrent requests or if no user ID
 
-    // Dodaj wiadomość użytkownika "Jump to summary"
-    const userMessage = { role: "user", content: "Jump to summary" };
+    // Dodaj wiadomość użytkownika "No, jump to summary"
+    const userMessage = { role: "user", content: "No, jump to summary" };
     const summaryPlaceholder = { role: "assistant", content: "", isGenerating: true };
     setMessages(prev => [...prev, userMessage, summaryPlaceholder]);
     setIsStreaming(true);
 
     try {
-      // Podziel historię na chat i reflection (bez ostatnich 2 wiadomości: "Jump to summary" i placeholder)
+      // Podziel historię na chat i reflection (bez ostatnich 2 wiadomości: "No, jump to summary" i placeholder)
       const messagesForHistory = messages.slice(0, -2);
       const chatHistory = [];
       const reflectionHistory = [];
