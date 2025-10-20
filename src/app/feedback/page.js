@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "hooks/useAuth";
 import { useApi } from "hooks/useApi";
 import { getCurrentUserId } from "lib/guestUser";
@@ -9,6 +9,7 @@ import WorkshopLayout from "../../components/layouts/WorkshopLayout";
 
 export default function FeedbackPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { user, isAuthenticated, isLoading } = useAuth();
   const { userId: authUserId, apiPost } = useApi();
   const [rating, setRating] = useState(4);
@@ -17,9 +18,18 @@ export default function FeedbackPage() {
   const [moreInput, setMoreInput] = useState("");
   const [selectedLikedChips, setSelectedLikedChips] = useState([]);
   const [selectedDislikedChips, setSelectedDislikedChips] = useState([]);
+  const [module, setModule] = useState("general");
+  const [sessionId, setSessionId] = useState(null);
 
-  const likedChips = ["AI tone of voice", "Design", "Tournament game"];
-  const dislikedChips = ["AI tone of voice", "Design", "Tournament game"];
+  useEffect(() => {
+    const moduleName = searchParams.get('module') || 'general';
+    const sessionIdParam = searchParams.get('session_id');
+    setModule(moduleName);
+    setSessionId(sessionIdParam);
+  }, [searchParams]);
+
+  const likedChips = ["AI tone of voice", "Design", "Ease of Use"];
+  const dislikedChips = ["AI tone of voice", "Design", "Too complicated"];
   
   // Use authenticated user ID or guest ID
   const [userId, setUserId] = useState(null);
@@ -84,7 +94,9 @@ export default function FeedbackPage() {
       liked_chips: selectedLikedChips,
       disliked_text: dislikedInput,
       disliked_chips: selectedDislikedChips,
-      additional_feedback: moreInput
+      additional_feedback: moreInput,
+      module: module,
+      session_id: sessionId
     };
     
     console.log("Sending feedback data:", feedbackData);
@@ -92,7 +104,7 @@ export default function FeedbackPage() {
 
     try {
       console.log("Calling apiPost...");
-      const response = await apiPost(`/values/feedback`, feedbackData);
+      const response = await apiPost(`/feedback`, feedbackData);
       console.log("Response received:", response);
       console.log("Response status:", response.status);
       console.log("Response ok:", response.ok);
@@ -122,7 +134,7 @@ export default function FeedbackPage() {
             Leave us feedback
           </h1>
           <p className="text-white text-sm sm:text-base leading-relaxed text-center">
-            Thank you for taking time to do our value workshop. Could you please rate your experience and write us a quick feedback
+            Thank you for taking time to do our {module} workshop. Could you please rate your experience and write us a quick feedback
           </p>
           
           {/* Star Rating */}

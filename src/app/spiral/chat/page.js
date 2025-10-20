@@ -23,41 +23,6 @@ export default function SpiralChatPage() {
   const [spiralData, setSpiralData] = useState(null);
   const messagesEndRef = useRef(null);
 
-  // Helper functions for message management
-  const addAssistantMessage = () => {
-    const assistantMessage = { 
-      role: "assistant", 
-      content: "", 
-      isGenerating: true 
-    };
-    setMessages(prev => {
-      const newMessages = [...prev, assistantMessage];
-      return newMessages;
-    });
-    return messages.length; // Return current length before adding
-  };
-
-  const updateAssistantMessage = (content, index, append = false) => {
-    console.log("Updating assistant message:", { content, index, append });
-    setMessages(prev => {
-      const updated = [...prev];
-      if (append) {
-        updated[index].content += content;
-      } else {
-        updated[index].content = content;
-        updated[index].isGenerating = false; // Reset generating flag when content is set
-      }
-      console.log("Updated message:", updated[index]);
-      return updated;
-    });
-  };
-
-  const addUserMessage = (content) => {
-    const userMessage = { role: "user", content };
-    setMessages(prev => [...prev, userMessage]);
-    return messages.length; // Return current length before adding
-  };
-
   // Get user ID
   useEffect(() => {
     if (!authLoading) {
@@ -110,19 +75,16 @@ export default function SpiralChatPage() {
   };
 
   const generateFirstAIMessage = async () => {
-    try {
-      setIsStreaming(true);
-      
-      // Add placeholder message
-      const assistantIndex = addAssistantMessage();
-      
-      const onMessageUpdate = (content, append = false) => {
-        updateAssistantMessage(content, assistantIndex, append);
-      };
+    if (isStreaming || !userId || !sessionId) return;
 
-      // Use initialization endpoint first
+    // Add placeholder message (overwrite messages like in Values)
+    const placeholderMessage = { role: "assistant", content: "", isGenerating: true };
+    setMessages([placeholderMessage]);
+    setIsStreaming(true);
+
+    try {
       const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
-      const initResponse = await fetch(`${API_URL}/spiral/chat`, {
+      const initResponse = await fetch(`${API_URL}/spiral/chat/`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
@@ -133,33 +95,44 @@ export default function SpiralChatPage() {
       if (initResponse.ok) {
         const initData = await initResponse.json();
         console.log("Initial AI message received:", initData.message);
-        // Update the placeholder with the initial message
-        onMessageUpdate(initData.message, false);
+        // Replace placeholder with actual message
+        setMessages([{
+          role: "assistant",
+          content: initData.message,
+          isGenerating: false,
+        }]);
+      } else {
+        // Fallback message on error
+        setMessages([{
+          role: "assistant",
+          content: "Witaj! Cieszę się, że tutaj jesteś. Czy jest coś konkretnego, z czym chciałbyś się zmierzyć?",
+          isGenerating: false,
+        }]);
       }
-      
-      setIsStreaming(false);
     } catch (error) {
       console.error("Error generating first message:", error);
+      setMessages([{
+        role: "assistant",
+        content: "Witaj! Cieszę się, że tutaj jesteś. Czy jest coś konkretnego, z czym chciałbyś się zmierzyć?",
+        isGenerating: false,
+      }]);
+    } finally {
       setIsStreaming(false);
     }
   };
 
   const handleSendMessage = async (message) => {
-    if (!message.trim() || !sessionId) return;
+    if (!message.trim() || !sessionId || isStreaming) return;
 
-    // Add user message and get assistant index
-    const assistantIndex = addUserMessage(message);
+    // Add user message
+    const userMessage = { role: "user", content: message };
+    setMessages(prev => [...prev, userMessage]);
     setIsStreaming(true);
 
     // Add placeholder for assistant response
-    const assistantMessageIndex = addAssistantMessage();
+    const placeholderMessage = { role: "assistant", content: "", isGenerating: true };
+    setMessages(prev => [...prev, placeholderMessage]);
 
-    // Create callback for updating assistant message
-    const onMessageUpdate = (content, append = false) => {
-      updateAssistantMessage(content, assistantMessageIndex, append);
-    };
-
-    // Use direct API call like Values
     try {
       const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
       const response = await fetch(`${API_URL}/spiral/chat/${sessionId}/stream`, {
@@ -174,29 +147,75 @@ export default function SpiralChatPage() {
       if (response.ok) {
         const reader = response.body.getReader();
         const decoder = new TextDecoder();
+        let accumulatedContent = "";
+        let buffer = "";
         
         while (true) {
           const { done, value } = await reader.read();
           if (done) break;
           
-          const chunk = decoder.decode(value);
-          const lines = chunk.split('\n');
+          // Decode chunk and add to buffer
+          buffer += decoder.decode(value, { stream: true });
+          
+          // Split by newlines to process complete SSE messages
+          const lines = buffer.split('\n');
+          // Keep last incomplete line in buffer
+          buffer = lines.pop() || "";
           
           for (const line of lines) {
-            if (line.startsWith('data: ')) {
-              const data = JSON.parse(line.slice(6));
-              if (data.content) {
-                onMessageUpdate(data.content, true);
+            if (!line.startsWith('data: ')) continue;
+            const payload = line.slice(6); // Don't trim - spaces are part of the content!
+            
+            // SSE payload is just text, not JSON
+            accumulatedContent += payload;
+            
+            // Update the last message (assistant) with accumulated content
+            setMessages(prev => {
+              const updated = [...prev];
+              const lastIndex = updated.length - 1;
+              if (updated[lastIndex]?.role === "assistant") {
+                updated[lastIndex] = {
+                  role: "assistant",
+                  content: accumulatedContent,
+                  isGenerating: false,
+                };
               }
-            }
+              return updated;
+            });
           }
         }
+      } else {
+        // Error fallback
+        setMessages(prev => {
+          const updated = [...prev];
+          const lastIndex = updated.length - 1;
+          if (updated[lastIndex]?.isGenerating) {
+            updated[lastIndex] = {
+              role: "assistant",
+              content: "Przepraszam, wystąpił błąd. Spróbuj ponownie.",
+              isGenerating: false,
+            };
+          }
+          return updated;
+        });
       }
     } catch (error) {
       console.error("Error sending message:", error);
+      setMessages(prev => {
+        const updated = [...prev];
+        const lastIndex = updated.length - 1;
+        if (updated[lastIndex]?.isGenerating) {
+          updated[lastIndex] = {
+            role: "assistant",
+            content: "Przepraszam, wystąpił błąd. Spróbuj ponownie.",
+            isGenerating: false,
+          };
+        }
+        return updated;
+      });
+    } finally {
+      setIsStreaming(false);
     }
-
-    setIsStreaming(false);
   };
 
   if (authLoading || !userId) {
@@ -212,24 +231,20 @@ export default function SpiralChatPage() {
 
   const quickTips = [
     {
-      label: "Kim jestem?",
-      onClick: () => handleSendMessage("Kim jestem w kontekście tego problemu?")
+      label: "Kończę na dziś",
+      onClick: () => router.push("/spiral/summary"),
     },
     {
-      label: "Co robię?",
-      onClick: () => handleSendMessage("Co robię w związku z tym problemem?")
+      label: "Quick tip",
+      onClick: () => handleSendMessage("Daj mi krótką wskazówkę, na co zwrócić uwagę teraz."),
     },
-    {
-      label: "Co mam?",
-      onClick: () => handleSendMessage("Co mam dzięki temu co robię?")
-    }
   ];
 
   return (
     <div className="flex flex-col min-h-[calc(100vh-16rem)]">
       {/* Chat messages area */}
       <div className="flex-1 overflow-y-auto">
-        <div className="space-y-6 pt-8 pb-20">
+        <div className="space-y-6 pt-16 pb-20">
           {/* Wiadomości */}
           <div className="space-y-6">
             {messages.map((message, index) => (
