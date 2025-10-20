@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Star, Target, MessageSquare, User, LogOut, Clock, CheckCircle, TrendingUp, Trash2, Sparkles } from "lucide-react";
+import { Star, Target, MessageSquare, User, LogOut, Clock, CheckCircle, TrendingUp, Trash2, Sparkles, RotateCcw } from "lucide-react";
 import { useAuth } from "hooks/useAuth";
 import DeleteAccountModal from "components/DeleteAccountModal";
 
@@ -326,6 +326,29 @@ export default function DashboardPage() {
             Coming Soon
           </div>
         </div>
+
+        {/* 🔹 Spiral */}
+        <Link href="/spiral/init">
+          <div
+            className="p-6 rounded-lg text-center hover:shadow-lg transition cursor-pointer relative"
+            style={{
+              background: "var(--Primary-1)",
+              border: "2px solid var(--Primary-7-main)",
+            }}
+          >
+            <div className="absolute top-2 right-2 bg-orange-500 text-white text-xs font-bold px-2 py-1 rounded-full">
+              Beta
+            </div>
+            <RotateCcw
+              className="w-10 h-10 mx-auto mb-4"
+              style={{ color: "var(--Secondary-5-main)" }}
+            />
+            <h2 className="text-xl font-semibold mb-2">Spiral</h2>
+            <p className="text-gray-600">
+              Spiralna metoda autorefleksji i zrozumienia wzorców.
+            </p>
+          </div>
+        </Link>
 
         {/* 🔹 Chat */}
           <div
