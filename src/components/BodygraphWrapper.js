@@ -128,7 +128,7 @@ export default function BodygraphWrapper({ sessionData }) {
 
   return (
     <>
-    <div className="bg-white p-8 rounded-lg shadow-lg">
+    <div className="bg-white rounded-lg shadow-lg">
 
         {/* Bodygraph z panelami - responsive layout */}
         <div className="flex flex-col sm:flex-row items-center justify-center gap-2 md:gap-4 lg:gap-6">
@@ -165,7 +165,7 @@ export default function BodygraphWrapper({ sessionData }) {
 
         {/* Channels Section */}
         {definedChannels && definedChannels.length > 0 && (
-          <div className="mt-8 pt-8 border-t border-gray-200">
+          <div className="mt-8 pt-8 border-t border-gray-200 p-6">
             <h3 className="text-xl font-semibold mb-4">Zdefiniowane Kanały</h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
               {definedChannels.map((channel) => {
@@ -198,7 +198,7 @@ export default function BodygraphWrapper({ sessionData }) {
         )}
 
         {/* Gates Section */}
-        <div className="mt-8 pt-8 border-t border-gray-200">
+        <div className="mt-8 pt-8 border-t border-gray-200 p-6">
           <h3 className="text-xl font-semibold mb-4">Aktywne Bramki (Gates)</h3>
           {loadingGates ? (
             <div className="text-center py-4">

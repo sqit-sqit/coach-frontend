@@ -133,7 +133,7 @@ function HDChartContent() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="max-w-4xl mx-auto px-6 py-8">
+      <div className="w-full">
       <div className="text-center mb-8">
         <h1 className="text-3xl font-bold text-gray-900 mt-12 mb-4">
           Twój Human Design
@@ -168,7 +168,7 @@ function HDChartContent() {
       </div>
 
       {/* Main Results */}
-      <div className="grid md:grid-cols-2 gap-6 mb-8">
+      <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         {/* Type */}
         <div 
           className="bg-white border border-[var(--Primary-7-main)] rounded-lg p-6 hover:shadow-md transition cursor-pointer"
@@ -210,7 +210,7 @@ function HDChartContent() {
       </div>
 
       {/* Secondary Results */}
-      <div className="grid md:grid-cols-2 gap-6 mb-8">
+      <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         {/* Authority */}
         <div 
           className="bg-white border border-[var(--Primary-7-main)] rounded-lg p-6 hover:shadow-md transition cursor-pointer"
@@ -253,7 +253,7 @@ function HDChartContent() {
       {/* Birth Data */}
       <div className="bg-white rounded-lg shadow-lg p-6 mb-8">
         <h2 className="text-xl font-semibold mb-4">Dane urodzenia</h2>
-        <div className="grid md:grid-cols-2 gap-4 text-sm">
+        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4 text-sm">
           <div>
             <span className="font-medium">Imię:</span> {sessionData.name}
           </div>
