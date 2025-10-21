@@ -4,12 +4,15 @@ import { useState, useEffect } from 'react';
 import BodyGraphHDGradient from './BodyGraphHDGradient';
 import GateCard from './ui/GateCard';
 import GateModal from './ui/GateModal';
+import ChannelModal from './ui/ChannelModal';
 
 export default function BodygraphWrapper({ sessionData }) {
   const [gatesData, setGatesData] = useState({});
   const [loadingGates, setLoadingGates] = useState(true);
   const [selectedGate, setSelectedGate] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedChannel, setSelectedChannel] = useState(null);
+  const [isChannelModalOpen, setIsChannelModalOpen] = useState(false);
 
   useEffect(() => {
     const fetchGatesData = async () => {
@@ -45,6 +48,45 @@ export default function BodygraphWrapper({ sessionData }) {
   const handleCloseModal = () => {
     setIsModalOpen(false);
     setSelectedGate(null);
+  };
+
+  const handleChannelClick = (channel) => {
+    const [gate1, gate2] = channel.split('-').map(Number);
+    
+    // Mapowanie centrów dla kanałów (podstawowe mapowanie)
+    const centerMap = {
+      1: 'G', 2: 'Sacral', 3: 'Sacral', 4: 'Ajna', 5: 'Sacral', 6: 'Solar Plexus',
+      7: 'G', 8: 'Throat', 9: 'Sacral', 10: 'G', 11: 'Ajna', 12: 'Throat',
+      13: 'G', 14: 'Sacral', 15: 'G', 16: 'Throat', 17: 'Ajna', 18: 'Spleen',
+      19: 'Root', 20: 'Throat', 21: 'Ego', 22: 'Throat', 23: 'Throat', 24: 'Ajna',
+      25: 'G', 26: 'Ego', 27: 'Sacral', 28: 'Spleen', 29: 'Sacral', 30: 'Solar Plexus',
+      31: 'G', 32: 'Spleen', 33: 'G', 34: 'Throat', 35: 'Throat', 36: 'Solar Plexus',
+      37: 'Solar Plexus', 38: 'Spleen', 39: 'Root', 40: 'Solar Plexus', 41: 'Solar Plexus',
+      42: 'Sacral', 43: 'Ajna', 44: 'Ego', 45: 'Ego', 46: 'Sacral', 47: 'Ajna',
+      48: 'Spleen', 49: 'Root', 50: 'Sacral', 51: 'G', 52: 'Sacral', 53: 'Sacral',
+      54: 'Spleen', 55: 'Root', 56: 'Ajna', 57: 'G', 58: 'Spleen', 59: 'Solar Plexus',
+      60: 'Sacral', 61: 'Ajna', 62: 'Ajna', 63: 'Head', 64: 'Ajna'
+    };
+
+    const channelInfo = {
+      channel: channel,
+      gate1: gate1,
+      gate2: gate2,
+      center1: centerMap[gate1] || 'Unknown',
+      center2: centerMap[gate2] || 'Unknown',
+      description: `Kanał ${channel} łączy centra ${centerMap[gate1] || 'Unknown'} i ${centerMap[gate2] || 'Unknown'}, tworząc stabilne połączenie energetyczne.`,
+      meaning: `Ten kanał reprezentuje stałe połączenie między centrami ${centerMap[gate1] || 'Unknown'} i ${centerMap[gate2] || 'Unknown'}, które jest zawsze aktywne w Twoim wykresie Human Design.`,
+      gate1Info: gatesData[gate1] ? `${gatesData[gate1].name} - ${gatesData[gate1].theme}` : `Bramka ${gate1}`,
+      gate2Info: gatesData[gate2] ? `${gatesData[gate2].name} - ${gatesData[gate2].theme}` : `Bramka ${gate2}`
+    };
+
+    setSelectedChannel(channelInfo);
+    setIsChannelModalOpen(true);
+  };
+
+  const handleCloseChannelModal = () => {
+    setIsChannelModalOpen(false);
+    setSelectedChannel(null);
   };
 
   if (!sessionData) {
@@ -131,7 +173,8 @@ export default function BodygraphWrapper({ sessionData }) {
                 return (
                   <div
                     key={channel}
-                    className="bg-blue-50 border border-blue-200 rounded-lg p-4 hover:bg-blue-100 transition"
+                    className="bg-blue-50 border border-blue-200 rounded-lg p-4 hover:bg-blue-100 transition cursor-pointer"
+                    onClick={() => handleChannelClick(channel)}
                   >
                     <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-2">
@@ -194,6 +237,12 @@ export default function BodygraphWrapper({ sessionData }) {
         gateInfo={selectedGate}
         isOpen={isModalOpen}
         onClose={handleCloseModal}
+      />
+
+      <ChannelModal
+        channelInfo={selectedChannel}
+        isOpen={isChannelModalOpen}
+        onClose={handleCloseChannelModal}
       />
     </>
   );
