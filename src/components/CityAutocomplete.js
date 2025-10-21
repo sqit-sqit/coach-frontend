@@ -143,12 +143,12 @@ export default function CityAutocomplete({
           onBlur={handleBlur}
           onFocus={() => query.length >= 2 && setIsOpen(true)}
           placeholder={placeholder}
-          className="w-full px-4 py-3 pl-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+          className="w-full px-4 py-3 pl-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FABB46] focus:border-transparent transition-colors"
           autoComplete="off"
         />
         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
           {loading ? (
-            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-purple-600"></div>
+            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-brand"></div>
           ) : (
             <Search className="h-4 w-4 text-gray-400" />
           )}
@@ -168,7 +168,7 @@ export default function CityAutocomplete({
               className={`w-full px-4 py-3 text-left flex items-center space-x-3 ${
                 city.isError 
                   ? "bg-red-50 text-red-600 cursor-default" 
-                  : `hover:bg-gray-50 ${index === selectedIndex ? "bg-purple-50 border-r-2 border-purple-500" : ""}`
+                  : `hover:bg-gray-50 ${index === selectedIndex ? "bg-yellow-50 border-r-2 border-brand" : ""}`
               }`}
             >
               {city.isError ? (

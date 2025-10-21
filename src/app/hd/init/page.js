@@ -203,7 +203,7 @@ function HDInitContent() {
                 type="text"
                 value={formData.name}
                 onChange={(e) => setFormData({...formData, name: e.target.value})}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FABB46] focus:border-transparent transition-colors"
                 placeholder="np. Jan (opcjonalne)"
               />
             </div>
@@ -217,7 +217,7 @@ function HDInitContent() {
                   type="date"
                   value={formData.birthDate}
                   onChange={(e) => setFormData({...formData, birthDate: e.target.value})}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FABB46] focus:border-transparent transition-colors"
                   required
                 />
               </div>
@@ -230,7 +230,7 @@ function HDInitContent() {
                   type="time"
                   value={formData.birthTime}
                   onChange={(e) => setFormData({...formData, birthTime: e.target.value})}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FABB46] focus:border-transparent transition-colors"
                   required
                 />
                 <p className="text-xs text-gray-500 mt-1">
@@ -273,7 +273,7 @@ function HDInitContent() {
             </div>
 
             {/* System obliczeń */}
-            <div className="bg-gray-50 p-6 rounded-lg">
+            <div className="bg-gray-50 p-6 rounded-lg hidden">
               <h3 className="text-lg font-medium text-gray-900 mb-4">
                 ⚙️ System obliczeń
               </h3>
@@ -360,7 +360,7 @@ function HDInitContent() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-purple-600 text-white py-3 rounded-lg font-semibold hover:bg-purple-700 disabled:opacity-50 transition"
+              className="w-full bg-[#6B7DFC] text-white py-3 rounded-lg font-semibold hover:bg-[#465CFB] disabled:opacity-50 transition"
             >
               {loading 
                 ? (isRegenerateMode ? "Regeneruję Human Design..." : "Obliczam Human Design...")

@@ -5,8 +5,9 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "../../../hooks/useAuth";
 import { getOrCreateGuestId } from "../../../lib/guestUser";
 import WorkshopLayout from "../../../components/layouts/WorkshopLayout";
-import { Star, Target, Heart, Users, ArrowRight } from "lucide-react";
+import { Star, Target, Heart, Users, ArrowRight, RefreshCw } from "lucide-react";
 import BodygraphWrapper from "../../../components/BodygraphWrapper";
+import HDResultModal from "../../../components/ui/HDResultModal";
 
 function HDChartContent() {
   const router = useRouter();
@@ -15,6 +16,8 @@ function HDChartContent() {
   const [sessionData, setSessionData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [selectedResult, setSelectedResult] = useState(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   // Get session ID and timestamp from URL
   const sessionId = searchParams.get('session_id') || '';
@@ -83,12 +86,26 @@ function HDChartContent() {
   };
 
   const handleGenerateSummary = () => {
-    router.push(`/hd/summary?session_id=${sessionId}`);
+    alert("Funkcja jeszcze niedostępna");
   };
 
   const handleRefreshData = () => {
     setLoading(true);
     fetchSessionData();
+  };
+
+  const handleResultClick = (type, value, label) => {
+    setSelectedResult({
+      type,
+      value,
+      label
+    });
+    setIsModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setSelectedResult(null);
   };
 
   if (loading) {
@@ -119,7 +136,8 @@ function HDChartContent() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto">
+    <div className="min-h-screen bg-gray-50">
+      <div className="max-w-4xl mx-auto px-6 py-8">
       <div className="text-center mb-8">
         <h1 className="text-3xl font-bold text-gray-900 mt-12 mb-4">
           Twój Human Design
@@ -156,7 +174,10 @@ function HDChartContent() {
       {/* Main Results */}
       <div className="grid md:grid-cols-2 gap-6 mb-8">
         {/* Type */}
-        <div className="bg-white rounded-lg shadow-lg p-6">
+        <div 
+          className="bg-white border border-[var(--Primary-7-main)] rounded-lg p-6 hover:shadow-md transition cursor-pointer"
+          onClick={() => handleResultClick('type', sessionData.type, 'Twój typ')}
+        >
           <div className="flex items-center mb-4">
             <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center mr-4">
               <Users className="w-6 h-6 text-purple-600" />
@@ -173,7 +194,10 @@ function HDChartContent() {
         </div>
 
         {/* Strategy */}
-        <div className="bg-white rounded-lg shadow-lg p-6">
+        <div 
+          className="bg-white border border-[var(--Primary-7-main)] rounded-lg p-6 hover:shadow-md transition cursor-pointer"
+          onClick={() => handleResultClick('strategy', sessionData.strategy, 'Strategia')}
+        >
           <div className="flex items-center mb-4">
             <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mr-4">
               <Target className="w-6 h-6 text-blue-600" />
@@ -192,7 +216,10 @@ function HDChartContent() {
       {/* Secondary Results */}
       <div className="grid md:grid-cols-2 gap-6 mb-8">
         {/* Authority */}
-        <div className="bg-white rounded-lg shadow-lg p-6">
+        <div 
+          className="bg-white border border-[var(--Primary-7-main)] rounded-lg p-6 hover:shadow-md transition cursor-pointer"
+          onClick={() => handleResultClick('authority', sessionData.authority, 'Autorytet')}
+        >
           <div className="flex items-center mb-4">
             <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mr-4">
               <Heart className="w-6 h-6 text-green-600" />
@@ -208,7 +235,10 @@ function HDChartContent() {
         </div>
 
         {/* Profile */}
-        <div className="bg-white rounded-lg shadow-lg p-6">
+        <div 
+          className="bg-white border border-[var(--Primary-7-main)] rounded-lg p-6 hover:shadow-md transition cursor-pointer"
+          onClick={() => handleResultClick('profile', sessionData.profile, 'Profil')}
+        >
           <div className="flex items-center mb-4">
             <div className="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center mr-4">
               <Star className="w-6 h-6 text-orange-600" />
@@ -257,34 +287,46 @@ function HDChartContent() {
         <BodygraphWrapper sessionData={sessionData} />
       </div>
 
-      {/* Regenerate Button */}
-      <div className="mb-6">
-        <button
-          onClick={() => router.push(`/hd/init?regenerate=${sessionId}`)}
-          className="w-full bg-orange-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-orange-700 transition flex items-center justify-center"
-        >
-          🔄 Wygeneruj jeszcze raz z innymi parametrami
-        </button>
+      {/* Action Buttons Container */}
+      <div className="mt-8 space-y-4">
+        {/* Main actions: Chat and Summary */}
+        <div className="flex flex-col sm:flex-row gap-4 justify-between">
+          <button
+            onClick={handleStartChat}
+            className="w-full sm:w-auto bg-[#6B7DFC] text-white px-6 py-3 rounded-lg font-semibold hover:bg-[#465CFB] transition flex items-center justify-center"
+          >
+            Rozpocznij rozmowę z AI
+            <ArrowRight className="w-5 h-5 ml-2" />
+          </button>
+          
+          <button
+            onClick={handleGenerateSummary}
+            className="w-full sm:w-auto bg-[#6B7DFC] text-white px-6 py-3 rounded-lg font-semibold hover:bg-[#465CFB] transition flex items-center justify-center"
+          >
+            Wygeneruj podsumowanie
+            <Star className="w-5 h-5 ml-2" />
+          </button>
+        </div>
+
+        {/* Regenerate button below and to the left */}
+        <div className="flex justify-start pt-2">
+          <button
+            onClick={() => router.push(`/hd/init?regenerate=${sessionId}`)}
+            className="text-gray-500 hover:underline flex items-center"
+          >
+            <RefreshCw className="w-4 h-4 mr-2" />
+            Powtórz
+          </button>
+        </div>
+      </div>
       </div>
 
-      {/* Action Buttons */}
-      <div className="flex flex-col sm:flex-row gap-4">
-        <button
-          onClick={handleStartChat}
-          className="flex-1 bg-purple-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-purple-700 transition flex items-center justify-center"
-        >
-          Rozpocznij rozmowę z AI
-          <ArrowRight className="w-5 h-5 ml-2" />
-        </button>
-        
-        <button
-          onClick={handleGenerateSummary}
-          className="flex-1 bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-700 transition flex items-center justify-center"
-        >
-          Wygeneruj podsumowanie
-          <Star className="w-5 h-5 ml-2" />
-        </button>
-      </div>
+      {/* HD Result Modal */}
+      <HDResultModal
+        resultInfo={selectedResult}
+        isOpen={isModalOpen}
+        onClose={handleCloseModal}
+      />
     </div>
   );
 }

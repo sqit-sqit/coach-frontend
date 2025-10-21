@@ -142,11 +142,16 @@ export default function ValuesChoosePage() {
         </p>
 
         <div className="flex justify-center gap-4 mt-6">
-          <Button text="Play a game" onClick={() => router.push("/values/game")} />
+          <Button 
+            text="Play a game" 
+            onClick={() => router.push("/values/game")}
+            className="bg-[#6B7DFC] hover:bg-[#465CFB] text-white border-none"
+          />
           <Button
             text="Continue"
             onClick={saveChosenValue}
             disabled={!chosenValue}
+            className="bg-[#6B7DFC] hover:bg-[#465CFB] text-white border-none"
           />
         </div>
       </div>
