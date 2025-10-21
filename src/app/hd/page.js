@@ -27,11 +27,19 @@ export default function HDPage() {
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-4xl mx-auto px-6 py-8">
         <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">
-            Human Design
-          </h1>
-          <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+          <div className="flex items-center justify-center mb-4">
+            <h1 className="text-4xl font-bold text-gray-900 mr-3">
+              Human Design
+            </h1>
+            <span className="bg-orange-100 text-orange-800 text-sm font-medium px-3 py-1 rounded-full">
+              BETA
+            </span>
+          </div>
+          <p className="text-xl text-gray-600 max-w-2xl mx-auto mb-2">
             Odkryj swoją unikalną naturę i sposób funkcjonowania w świecie
+          </p>
+          <p className="text-sm text-orange-600 font-medium">
+            🧪 To jest wersja testowa aplikacji
           </p>
         </div>
 
@@ -53,6 +61,11 @@ export default function HDPage() {
                 <strong className="font-semibold"> Traktuj te opisy z rezerwą</strong> i nie używaj ich jako jedynego źródła 
                 do podejmowania ważnych decyzji życiowych. Human Design to złożony system, który najlepiej poznawać 
                 z pomocą doświadczonych nauczycieli i autentycznych źródeł.
+              </p>
+              <p className="text-amber-700 leading-relaxed mt-3">
+                <strong className="font-semibold">Dodatkowo:</strong> Bodygraph (wykres graficzny) w tej aplikacji 
+                jest również w wersji testowej i graficznie różni się od oficjalnego wykresu Human Design. 
+                Używaj go wyłącznie do celów orientacyjnych.
               </p>
             </div>
           </div>
