@@ -12,6 +12,10 @@ function HDLayoutContent({ children }) {
   // Determine if we should show back button
   const showBackButton = currentStep > 1;
   
+  // Chart page needs wider layout for bodygraph
+  const isChartPage = pathname?.includes('/chart');
+  const width = isChartPage ? "wide" : "default";
+  
   // Custom back handler for init steps
   const handleBack = () => {
     const step = parseInt(currentStep);
@@ -26,7 +30,7 @@ function HDLayoutContent({ children }) {
 
   return (
     <WorkshopLayout 
-      width="default" 
+      width={width} 
       background="gray"
       showBackButton={true}
       backButtonProps={{ onClick: () => window.history.back() }}
