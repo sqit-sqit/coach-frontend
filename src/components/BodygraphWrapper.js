@@ -121,6 +121,39 @@ export default function BodygraphWrapper({ sessionData }) {
           </div>
         </div>
 
+        {/* Channels Section */}
+        {definedChannels && definedChannels.length > 0 && (
+          <div className="mt-8 pt-8 border-t border-gray-200">
+            <h3 className="text-xl font-semibold mb-4">Zdefiniowane Kanały</h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+              {definedChannels.map((channel) => {
+                const [gate1, gate2] = channel.split('-').map(Number);
+                return (
+                  <div
+                    key={channel}
+                    className="bg-blue-50 border border-blue-200 rounded-lg p-4 hover:bg-blue-100 transition"
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-2">
+                        <div className="w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center text-sm font-bold">
+                          {gate1}
+                        </div>
+                        <span className="text-blue-600 font-semibold">-</span>
+                        <div className="w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center text-sm font-bold">
+                          {gate2}
+                        </div>
+                      </div>
+                      <span className="text-blue-700 text-sm font-medium">
+                        Kanał {channel}
+                      </span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
         {/* Gates Section */}
         <div className="mt-8 pt-8 border-t border-gray-200">
           <h3 className="text-xl font-semibold mb-4">Aktywne Bramki (Gates)</h3>

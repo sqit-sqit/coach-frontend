@@ -89,10 +89,6 @@ function HDChartContent() {
     alert("Funkcja jeszcze niedostępna");
   };
 
-  const handleRefreshData = () => {
-    setLoading(true);
-    fetchSessionData();
-  };
 
   const handleResultClick = (type, value, label) => {
     setSelectedResult({
@@ -256,16 +252,7 @@ function HDChartContent() {
 
       {/* Birth Data */}
       <div className="bg-white rounded-lg shadow-lg p-6 mb-8">
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-semibold">Dane urodzenia</h2>
-          <button
-            onClick={handleRefreshData}
-            className="text-sm bg-blue-100 text-blue-700 px-3 py-1 rounded-lg hover:bg-blue-200 transition flex items-center"
-            title="Odśwież dane z bazy"
-          >
-            🔄 Odśwież
-          </button>
-        </div>
+        <h2 className="text-xl font-semibold mb-4">Dane urodzenia</h2>
         <div className="grid md:grid-cols-2 gap-4 text-sm">
           <div>
             <span className="font-medium">Imię:</span> {sessionData.name}
